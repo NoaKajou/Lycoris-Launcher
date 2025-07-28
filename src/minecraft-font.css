@@ -1,0 +1,8 @@
+/* Minecraft font: Minecraftia (public domain) */
+@font-face {
+  font-family: 'Minecraftia';
+  src: url('minecraft_font.ttf') format('truetype'),
+       url('/src/minecraft_font.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

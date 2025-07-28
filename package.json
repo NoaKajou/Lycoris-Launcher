@@ -1,0 +1,21 @@
+{
+  "name": "lycoris-launcher",
+  "version": "1.0.0",
+  "description": "Un launcher d'application basé sur Electron.js",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "echo 'Ajoutez votre script de build ici'"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^30.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "minecraft-launcher-core": "^3.18.2",
+    "msal": "^1.4.18",
+    "node-fetch": "^3.3.2"
+  }
+}
