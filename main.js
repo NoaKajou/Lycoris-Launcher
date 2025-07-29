@@ -67,14 +67,16 @@ require('dotenv').config();
 // Pour la gestion des comptes persistants
 
 let ACCOUNTS_PATH;
+let LAST_ACCOUNT_PATH;
 let ENCRYPTED = true; // Active le chiffrement
 let key;
 
 
-// Initialisation unique de la fenêtre principale et de l'auto-login
 
+// Initialisation unique de la fenêtre principale et de l'auto-login
 app.whenReady().then(async () => {
   ACCOUNTS_PATH = path.join(app.getPath('userData'), 'accounts.json');
+  LAST_ACCOUNT_PATH = path.join(app.getPath('userData'), 'lastAccount.json');
   key = loadKey();
   if (ENCRYPTED) {
     console.log('[SECURE] Le chiffrement AES des comptes est ACTIVÉ.');
@@ -94,32 +96,51 @@ app.whenReady().then(async () => {
     console.error('Impossible d\'initialiser accounts.json :', e);
   }
 
-  // Auto-login: tente de rafraîchir le premier compte avec un refresh_token
+  // Auto-login: tente de rafraîchir le dernier compte utilisé (si dispo)
   let accounts = loadAccounts();
-  if (accounts.length > 0) {
-    // Prend le premier compte avec un refresh_token valide
-    const acc = accounts.find(a => a.refreshToken);
-    if (acc) {
-      console.log('[DEBUG] Auto-login: found refresh_token for', acc.username || acc.uuid, 'token:', acc.refreshToken);
-      try {
-        const refreshed = await refreshAccessToken(acc);
-        // On crée la fenêtre puis on envoie l'event
-        createWindow();
-        if (win) {
-          win.webContents.once('did-finish-load', () => {
-            win.webContents.send('ms-login-success', refreshed);
-            win.webContents.send('ms-login-status', `Auto-connected: ${refreshed.username}`);
-          });
-        }
-        return;
-      } catch (e) {
-        console.warn('Auto-login failed:', e.message);
-      }
-    } else {
-      console.log('[DEBUG] Auto-login: no account with refresh_token found');
+  let lastAccountUUID = null;
+  try {
+    if (fs.existsSync(LAST_ACCOUNT_PATH)) {
+      lastAccountUUID = JSON.parse(fs.readFileSync(LAST_ACCOUNT_PATH, 'utf-8')).uuid;
     }
+  } catch (e) {
+    console.warn('Impossible de lire lastAccount.json:', e);
+  }
+  let acc = null;
+  if (lastAccountUUID) {
+    acc = accounts.find(a => a.uuid === lastAccountUUID && a.refreshToken);
+  }
+  if (!acc) {
+    acc = accounts.find(a => a.refreshToken);
+  }
+  if (acc) {
+    console.log('[DEBUG] Auto-login: found refresh_token for', acc.username || acc.uuid, 'token:', acc.refreshToken);
+    try {
+      const refreshed = await refreshAccessToken(acc);
+      createWindow();
+      if (win) {
+        win.webContents.once('did-finish-load', () => {
+          win.webContents.send('ms-login-success', refreshed);
+          win.webContents.send('ms-login-status', `Auto-connected: ${refreshed.username}`);
+        });
+      }
+      return;
+    } catch (e) {
+      console.warn('Auto-login failed:', e.message);
+    }
+  } else {
+    console.log('[DEBUG] Auto-login: no account with refresh_token found');
   }
   createWindow();
+});
+
+// IPC pour sauvegarder l'UUID du dernier compte utilisé
+ipcMain.on('set-last-account', (event, uuid) => {
+  try {
+    fs.writeFileSync(LAST_ACCOUNT_PATH, JSON.stringify({ uuid }), 'utf-8');
+  } catch (e) {
+    console.warn('Impossible d\'écrire lastAccount.json:', e);
+  }
 });
 
 app.on('activate', function () {

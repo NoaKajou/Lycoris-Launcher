@@ -19,9 +19,16 @@ window.addEventListener('DOMContentLoaded', () => {
   // Nouvelle gestion : tout vient du backend (main process)
   let accounts = [];
   let currentAccount = null;
+  // Restaure le dernier compte utilisé depuis localStorage
+  const lastAccountUUID = localStorage.getItem('lastAccountUUID');
 
   async function loadAccountsFromBackend() {
     accounts = await window.electronAPI.getAccounts();
+    // Si un compte a été utilisé en dernier, on le sélectionne
+    if (lastAccountUUID) {
+      const acc = accounts.find(a => a.uuid === lastAccountUUID);
+      if (acc) currentAccount = acc;
+    }
     renderAccountsPanel();
     renderPlayerBtn();
   }
@@ -44,6 +51,8 @@ window.addEventListener('DOMContentLoaded', () => {
         try {
           const accData = await window.electronAPI.switchAccount(acc.uuid);
           currentAccount = accData;
+          // Sauvegarde l'UUID du compte utilisé côté main process
+          window.electronAPI.setLastAccount && window.electronAPI.setLastAccount(accData.uuid);
           msStatus.textContent = `Connecté : ${accData.username}`;
           renderPlayerBtn();
         } catch (err) {
@@ -116,6 +125,9 @@ window.addEventListener('DOMContentLoaded', () => {
       if (data.uuid && data.refresh_token) {
         refreshTokens[data.uuid] = data.refresh_token;
       }
+      // Définit ce compte comme courant et sauvegarde l'UUID côté main process
+      currentAccount = data;
+      window.electronAPI.setLastAccount && window.electronAPI.setLastAccount(data.uuid);
       renderAccountsPanel();
       renderPlayerBtn();
       // n'ouvre plus le panneau automatiquement
