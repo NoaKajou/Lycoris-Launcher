@@ -1,52 +1,48 @@
 
 
-> ⚠️ **Attention : Ce launcher n'est pas encore fonctionnel.**
->
-> L'accès à l'API Minecraft Java Edition nécessite désormais une approbation manuelle de Mojang/Microsoft. Tant que l'application n'est pas sur la allowlist officielle, l'authentification Minecraft échouera.
-
 # Lycoris Launcher
 
-Un launcher Minecraft Java Edition moderne, open source, développé avec Electron.js et authentification Microsoft officielle.
+Un launcher Minecraft Java Edition moderne, open source, pensé pour la communauté française, avec une interface personnalisée et une sécurité renforcée.
 
-## Fonctionnalités
-- Interface personnalisée et moderne (Electron.js)
-- Authentification Microsoft OAuth2 (support officiel Mojang)
-- Récupération du profil Minecraft après connexion
-- Boutons de fenêtre personnalisés (minimiser, maximiser, fermer)
-- Prêt pour la future allowlist Mojang
+## Fonctionnalités principales
+- Interface moderne et personnalisée (Electron.js)
+- Authentification Microsoft OAuth2 officielle (Mojang)
+- Multi-comptes : ajoute, supprime, et change de compte facilement
+- Auto-login sécurisé (refresh_token)
+- Boutons de fenêtre custom (réduire, agrandir, fermer)
+- Affichage de l’avatar Minecraft (mc-heads.net)
+- Police Minecraft intégrée (Minecraftia)
+- Chiffrement AES-256-GCM des comptes (clé unique locale)
+- Aucune donnée envoyée à un serveur tiers
 
-## Prérequis
-- Node.js (>= 16)
-- Un compte Microsoft avec un compte Minecraft Java Edition associé
-- Une application Azure enregistrée (voir ci-dessous)
 
-## Installation
-```bash
-git clone https://github.com/tonpseudo/Lycoris-Launcher.git
-cd Lycoris-Launcher
-npm install
-```
+## Sécurité
+- Les tokens et comptes sont chiffrés avec une clé unique générée à l’installation.
+- Même si quelqu’un copie le fichier `accounts.json`, il ne pourra rien en faire sans la clé locale.
+- **Ne partage jamais tes tokens !**
 
-## Configuration Azure/Microsoft
-1. Crée une application sur https://portal.azure.com/
-2. Type de comptes : Comptes Microsoft personnels uniquement
-3. Plateforme : Application mobile et de bureau
-4. URL de redirection : `http://localhost:3000/auth`
-5. Récupère le client_id et (si besoin) le client_secret
-6. (Optionnel) Ajoute ton application à la allowlist Mojang : https://aka.ms/java-api-allowlist
+---
 
-## Lancement
-```bash
-npm start
-```
+> 🚧 Ce projet est encore en cours de développement et n'est pas prêt à être utilisé ou installé par le public.
+> Les instructions d'installation et de configuration seront publiées lors de la sortie officielle.
 
 ## Utilisation
-- Clique sur "Se connecter avec Microsoft" pour lancer l’authentification.
-- Si ton application n’est pas encore sur la allowlist Mojang, la connexion Minecraft échouera (voir message d’erreur).
+- Clique sur « Connexion » pour t’authentifier avec Microsoft.
+- Ajoute plusieurs comptes si besoin, change d’utilisateur en un clic.
+- Si ton application n’est pas sur la allowlist Mojang, la connexion Minecraft échouera (voir message d’erreur).
 
 ## Dépannage
 - Si la fenêtre de login Microsoft est blanche, vérifie l’URL de redirection dans Azure et dans le code.
-- Si tu obtiens "Invalid app registration" ou "Public clients can't send a client secret", vérifie la configuration Azure (voir plus haut).
-- Pour toute question sur la allowlist Mojang, voir : https://aka.ms/java-api-allowlist
+- Si tu obtiens « Invalid app registration » ou « Public clients can't send a client secret », vérifie la configuration Azure.
+
+## Questions fréquentes
+
+### Est-ce que mes comptes sont en sécurité ?
+Oui, tout est chiffré localement. La clé de chiffrement ne quitte jamais ta machine.
+
+### Quels sont les risques si je donne mon token ?
+Quelqu’un pourrait accéder à ton compte Minecraft/Microsoft, jouer à ta place, ou modifier tes infos. Ne partage jamais tes tokens.
+
+---
 
 **Projet open source non affilié à Mojang/Microsoft.**
