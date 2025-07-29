@@ -1,4 +1,3 @@
-console.log('Renderer prêt !');
 
 window.addEventListener('DOMContentLoaded', () => {
   const minBtn = document.querySelector('.win-min');
@@ -104,7 +103,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     window.electronAPI.onMsLoginStatus((status) => {
       msStatus.textContent = status;
-      console.log('[DEBUG] ms-login-status:', status);
       if (status && status.toLowerCase().includes('annulée')) {
         // Réinitialise l'UI si l'utilisateur annule ou ferme la fenêtre de login
         msBtn.style.display = '';
@@ -119,8 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
       } else {
         accounts.push(data);
       }
-      // Debug : log le refresh_token reçu
-      console.log('[DEBUG] onMsLoginSuccess:', data.username, 'uuid:', data.uuid, 'refresh_token:', data.refresh_token);
+      // Debug désactivé : ne plus log le refresh_token
       // Suppression de l'alerte si le refresh_token est manquant
       if (data.uuid && data.refresh_token) {
         refreshTokens[data.uuid] = data.refresh_token;

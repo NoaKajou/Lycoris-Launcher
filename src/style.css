@@ -1,3 +1,151 @@
+.feather-logo-icon {
+  font-family: FontAwesome;
+  font-size: 1.5em;
+  color: #fff;
+  margin-right: 14px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.feather-logo-icon img {
+  height: 40px;
+  width: 40px;
+  display: block;
+}
+
+.feather-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #181b20;
+  height: 48px;
+  padding: 0 16px 0 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  border-bottom: 1.5px solid #222;
+  box-shadow: 0 2px 8px #0002;
+}
+.feather-logo {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #fff;
+  letter-spacing: 0.04em;
+  margin-left: 12px;
+  text-transform: uppercase;
+}
+.feather-title {
+  font-family: 'Minecraftia', monospace;
+  font-size: 1.1em;
+  margin-left: 4px;
+}
+.feather-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-left: 0;
+  width: 100%;
+}
+.feather-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: linear-gradient(90deg, #23272e 0%, #23272e 100%);
+  border: 1.5px solid #23272e;
+  color: #e0e0e0;
+  font-size: 1.08em;
+  font-family: inherit;
+  padding: 0 24px;
+  height: 44px;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border-color 0.18s;
+  position: relative;
+  box-shadow: 0 1px 4px #0002;
+  outline: none;
+  border-right: none;
+}
+.feather-nav-btn:first-child {
+  border-radius: 10px 0 0 10px;
+}
+.feather-nav-btn:last-child {
+  border-radius: 0 10px 10px 0;
+  border-right: 1.5px solid #23272e;
+}
+.feather-nav-btn:focus {
+  outline: none;
+  border-color: #23272e;
+  box-shadow: none;
+}
+
+.feather-nav-btn.active {
+  background: #e74c3c33 !important;
+  color: #fff;
+  border-color: #e74c3c;
+  z-index: 2;
+}
+.feather-nav-btn:hover {
+  background: linear-gradient(90deg, #23272e 0%, #23272e 100%);
+  color: #fff;
+  border-color: #23272e;
+  box-shadow: 0 1px 4px #0002;
+  z-index: 2;
+}
+.feather-nav-icon {
+  color: #fff !important;
+  font-family: FontAwesome;
+  font-size: 1.35em;
+  display: inline-block;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 2px #0008);
+  margin-right: 2px;
+}
+.feather-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 8px;
+  max-width: 300px;
+  min-width: 200;
+  overflow: visible;
+  position: relative;
+}
+#player-btn.user-info-neon {
+  display: flex !important;
+  align-items: center;
+  background: #23272e;
+  border-radius: 8px;
+  padding: 2px 10px 2px 2px;
+  margin-right: 0;
+  box-shadow: 0 2px 8px #0003;
+  min-width: 0;
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  height: 40px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+#player-btn.user-info-neon:hover {
+  background: #2e323a;
+  box-shadow: 0 4px 12px #0005;
+}
+#content {
+  margin-top: 60px;
+  padding: 0 0 0 0;
+}
+@media (max-width: 700px) {
+  .feather-nav-btn { padding: 0 8px; font-size: 0.95em; }
+  .feather-logo { font-size: 1em; }
+  .feather-title { font-size: 0.95em; }
+  #content { margin-top: 56px; }
+}
 /* Minecraft font: Minecraftia (public domain) */
 @font-face {
   font-family: 'Minecraftia';
@@ -7,35 +155,44 @@
 }
 .accounts-panel {
   position: fixed;
-  top: 36px; /* sous la barre */
-  right: 0;
+  top: 56px;
+  right: 18px;
   width: 320px;
-  height: calc(100vh - 36px);
-  background: rgba(30,32,38,0.98);
-  box-shadow: -4px 0 24px 0 #000a, 0 0 18px 4px #fff2, 0 2px 12px #2f6fed44;
-  border-left: 2px solid #fff;
+  max-width: 92vw;
+  height: auto;
+  min-height: 180px;
+  max-height: 70vh;
+  background: rgba(24, 27, 32, 0.92);
+  box-shadow: 0 8px 32px 0 #000a, 0 2px 12px #2f6fed44;
+  border-radius: 18px;
+  border: 1.5px solid #23272e;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.35s cubic-bezier(.77,0,.18,1);
-  padding: 0;
-  backdrop-filter: blur(10px) saturate(1.2);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  transform: translateY(-30px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(.77,0,.18,1), transform 0.25s cubic-bezier(.77,0,.18,1);
+  padding: 18px 18px 12px 18px;
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
 }
 .accounts-panel.open {
-  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 #accounts-list {
   flex: 1;
   overflow-y: auto;
-  margin-top: 56px;
-  padding: 0;
+  margin-top: 18px;
+  padding: 0 2px;
+  max-height: 44vh;
 }
 .close-panel-btn {
   position: absolute;
-  top: 16px;
-  right: 18px;
+  top: 10px;
+  right: 14px;
   font-size: 2rem;
   color: #fff;
   background: none;
@@ -43,9 +200,19 @@
   cursor: pointer;
   z-index: 1010;
   transition: color 0.2s;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  opacity: 0.7;
+  font-weight: bold;
+  background: rgba(40,40,40,0.12);
 }
 .close-panel-btn:hover {
   color: #e67e22;
+  background: rgba(40,40,40,0.22);
+  opacity: 1;
 }
 .account-item {
   display: flex;
@@ -112,18 +279,18 @@
   align-items: center;
   gap: 10px;
   padding: 6px 18px 6px 8px;
-  background: rgba(30, 32, 38, 0.55);
-  border-radius: 12px;
-  box-shadow: 0 0 12px 2px #fff9, 0 2px 8px #2f6fed44;
-  border: 2px solid #fff;
+  background: #23272e;
+  border-radius: 8px;
+  box-shadow: none;
+  border: none;
   margin-right: 0;
   margin-top: 0;
   min-width: 90px;
   height: 38px;
   z-index: 12;
   position: relative;
-  backdrop-filter: blur(6px) saturate(1.2);
-  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .user-info-neon .user-head {
   width: 32px;
@@ -158,14 +325,14 @@
 }
 .ms-login-btn.neon-translucent {
   border: 2px solid #fff;
-  box-shadow: 0 0 12px 2px #fff9, 0 2px 8px #2f6fed44;
+  box-shadow: none;
   background: rgba(47, 111, 237, 0.18);
   color: #fff;
 }
 .ms-login-btn.neon-translucent:hover {
   background: rgba(47, 111, 237, 0.32);
   border-color: #fff;
-  box-shadow: 0 0 18px 4px #fff, 0 2px 12px #2f6fed88;
+  box-shadow: none;
 }
 .ms-login-btn:hover {
   background: #1a4fa3;

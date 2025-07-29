@@ -5,30 +5,67 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://mc-heads.net;">
   <title>Lycoris Launcher</title>
   <link rel="stylesheet" href="style.css">
-</head>
+</maishead>
 <body>
-  <div class="custom-titlebar">
-    <span class="app-title">Lycoris Launcher</span>
+  <header class="feather-header">
+    <div class="feather-logo">
+      <span class="feather-logo-icon"><img src="logo.png" alt="Logo" /></span>
+      <span class="feather-title">LYCORIS LAUNCHER</span>
+    </div>
+    <nav class="feather-nav">
+      <button class="feather-nav-btn" id="btn-play">
+        <span class="feather-nav-icon">
+          <img src="play.svg" alt="Play" style="height:1.3em;width:1.3em;vertical-align:middle;" />
+        </span>
+      </button>
+      <button class="feather-nav-btn" id="btn-mods">
+        <span class="feather-nav-icon">
+          <img src="mods.svg" alt="Mods" style="height:1.3em;width:1.3em;vertical-align:middle;" />
+        </span>
+      </button>
+      <button class="feather-nav-btn" id="btn-skins">
+        <span class="feather-nav-icon">
+          <img src="skins.svg" alt="Skins" style="height:1.3em;width:1.3em;vertical-align:middle;" />
+        </span>
+      </button>
+    </nav>
+    <div class="feather-account">
+      <div id="player-btn" class="user-info-neon" style="display:none; cursor:pointer;"></div>
+      <button id="ms-login-btn" class="ms-login-btn neon-translucent">Connexion</button>
+      <div id="accounts-panel" class="accounts-panel">
+        <button class="close-panel-btn" id="close-accounts-panel">×</button>
+        <div id="accounts-list"></div>
+        <button class="add-account-btn" id="add-account-btn">+ Ajouter un autre compte</button>
+      </div>
+    </div>
     <div class="window-controls">
       <button class="win-btn win-min" title="Réduire"></button>
       <button class="win-btn win-max" title="Agrandir"></button>
       <button class="win-btn win-close" title="Fermer"></button>
     </div>
+  </header>
+  <div id="content">
+    <!-- Page SPA chargée ici -->
   </div>
-  <div style="position: absolute; top: 46px; right: 32px; z-index: 11;">
-    <button id="ms-login-btn" class="ms-login-btn neon-translucent">Connexion</button>
-    <div id="player-btn" class="user-info-neon" style="display:none; cursor:pointer;"></div>
-    <div id="accounts-panel" class="accounts-panel">
-      <button class="close-panel-btn" id="close-accounts-panel">×</button>
-      <div id="accounts-list"></div>
-      <button class="add-account-btn" id="add-account-btn">+ Ajouter un autre compte</button>
-    </div>
-  </div>
-  <h1>Bienvenue sur Lycoris Launcher</h1>
-  <div style="font-family: 'Minecraftia', monospace; font-size: 2rem; color: #e67e22; margin: 18px 0;">Test police Minecraft : 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
-  <p>Lancez vos applications facilement !</p>
-  <!-- Le bouton de connexion est maintenant juste sous la barre, en haut à droite -->
+  <div id="loader" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#222b;backdrop-filter:blur(2px);padding:2em 3em;border-radius:1em;color:#fff;font-size:1.2em;z-index:1000;">Chargement...</div>
   <div id="ms-login-status"></div>
   <script src="renderer.js"></script>
+  <script src="js/router.js"></script>
+  <script>
+    // Change 'play' par 'mods' ou 'skins' selon la page affichée
+    let currentPage = 'play'; // À adapter dynamiquement selon ta logique
+    function setActiveNav(page) {
+      document.getElementById('btn-play').classList.remove('active');
+      document.getElementById('btn-mods').classList.remove('active');
+      document.getElementById('btn-skins').classList.remove('active');
+      if(page === 'play') document.getElementById('btn-play').classList.add('active');
+      if(page === 'mods') document.getElementById('btn-mods').classList.add('active');
+      if(page === 'skins') document.getElementById('btn-skins').classList.add('active');
+    }
+    setActiveNav(currentPage);
+    // Exemple : à appeler lors d'un changement de page
+    // setActiveNav('mods');
+  </script>
+  <!-- Styles déplacés dans style.css -->
 </body>
 </html>

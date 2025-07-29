@@ -114,7 +114,7 @@ app.whenReady().then(async () => {
     acc = accounts.find(a => a.refreshToken);
   }
   if (acc) {
-    console.log('[DEBUG] Auto-login: found refresh_token for', acc.username || acc.uuid, 'token:', acc.refreshToken);
+    // Debug désactivé : ne plus log le refresh_token
     try {
       const refreshed = await refreshAccessToken(acc);
       createWindow();
@@ -129,7 +129,7 @@ app.whenReady().then(async () => {
       console.warn('Auto-login failed:', e.message);
     }
   } else {
-    console.log('[DEBUG] Auto-login: no account with refresh_token found');
+    // Debug désactivé : aucun compte avec refresh_token trouvé
   }
   createWindow();
 });
@@ -271,8 +271,8 @@ ipcMain.on('refresh-with-token', async (event, { refresh_token }) => {
 let win;
 function createWindow() {
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 700,
+    height: 520,
     frame: false, // Supprime la barre de titre native (toolbar)
     autoHideMenuBar: true, // Cache le menu natif
     webPreferences: {
