@@ -16,63 +16,48 @@ window.addEventListener('DOMContentLoaded', () => {
   const accountsList = document.getElementById('accounts-list');
   const addAccountBtn = document.getElementById('add-account-btn');
   const playerBtn = document.getElementById('player-btn');
-  // Chargement des comptes et tokens depuis localStorage
+  // Nouvelle gestion : tout vient du backend (main process)
   let accounts = [];
-  let refreshTokens = {};
-  try {
-    const savedAccounts = localStorage.getItem('accounts');
-    const savedTokens = localStorage.getItem('refreshTokens');
-    if (savedAccounts) accounts = JSON.parse(savedAccounts);
-    if (savedTokens) refreshTokens = JSON.parse(savedTokens);
-  } catch (e) {
-    accounts = [];
-    refreshTokens = {};
-  }
-  function saveAccounts() {
-    localStorage.setItem('accounts', JSON.stringify(accounts));
-    localStorage.setItem('refreshTokens', JSON.stringify(refreshTokens));
+  let currentAccount = null;
+
+  async function loadAccountsFromBackend() {
+    accounts = await window.electronAPI.getAccounts();
+    renderAccountsPanel();
+    renderPlayerBtn();
   }
 
-  function renderAccountsPanel() {
+  async function renderAccountsPanel() {
     accountsList.innerHTML = '';
-    accounts.forEach((acc, idx) => {
+    accounts.forEach((acc) => {
       const item = document.createElement('div');
       item.className = 'account-item';
-      // Affichage debug refresh_token
-      const debugToken = refreshTokens[acc.uuid] || acc.refresh_token;
       item.innerHTML = `
         <img src="${acc.avatar}" alt="skin" class="user-head">
         <span class="user-name">${acc.username}</span>
         <button class="delete-account-btn" title="Supprimer ce compte">✕</button>
-        <span class="debug-refresh-token" style="font-size:0.7em;color:#e67e22;word-break:break-all;display:none"></span>
       `;
       // Connexion rapide sur clic sur l'item (hors bouton delete)
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', async (e) => {
         if (e.target.classList.contains('delete-account-btn')) return;
         closePanel();
-        const uuid = acc.uuid;
-        const refresh_token = refreshTokens[uuid] || acc.refresh_token;
-        // Debug affichage
-        const debugSpan = item.querySelector('.debug-refresh-token');
-        debugSpan.style.display = 'block';
-        debugSpan.textContent = refresh_token ? `refresh_token: ${refresh_token.slice(0,16)}...` : 'Aucun refresh_token';
-        console.log('[DEBUG] Switch vers', acc.username, 'uuid:', uuid, 'refresh_token:', refresh_token);
-        if (refresh_token) {
-          msStatus.textContent = 'Connexion automatique...';
-          window.electronAPI.refreshWithToken({ refresh_token });
-        } else {
-          msStatus.textContent = 'Aucun refresh_token, ouverture Microsoft...';
-          window.electronAPI.msLogin();
+        msStatus.textContent = 'Connexion au compte...';
+        try {
+          const accData = await window.electronAPI.switchAccount(acc.uuid);
+          currentAccount = accData;
+          msStatus.textContent = `Connecté : ${accData.username}`;
+          renderPlayerBtn();
+        } catch (err) {
+          msStatus.textContent = 'Erreur lors du switch : ' + err.message;
         }
       });
-      // Suppression du compte
-      item.querySelector('.delete-account-btn').addEventListener('click', (e) => {
+      // Suppression du compte (nécessite une IPC à ajouter côté main.js si on veut vraiment supprimer côté backend)
+      item.querySelector('.delete-account-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
-        accounts.splice(idx, 1);
-        if (refreshTokens[acc.uuid]) delete refreshTokens[acc.uuid];
-        saveAccounts();
+        // TODO: Ajouter une IPC pour supprimer côté backend, ici on fait juste côté UI
+        accounts = accounts.filter(a => a.uuid !== acc.uuid);
         renderAccountsPanel();
         renderPlayerBtn();
+        msStatus.textContent = 'Suppression locale (à synchroniser côté backend)';
       });
       accountsList.appendChild(item);
     });
@@ -80,7 +65,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function renderPlayerBtn() {
     if (accounts.length > 0) {
-      const acc = accounts[accounts.length - 1];
+      // Affiche le compte courant si défini, sinon le dernier
+      const acc = currentAccount || accounts[accounts.length - 1];
       playerBtn.innerHTML = `<img src="${acc.avatar}" alt="skin" class="user-head"><span class="user-name">${acc.username}</span>`;
       playerBtn.style.display = 'flex';
       msBtn.style.display = 'none';
@@ -123,7 +109,6 @@ window.addEventListener('DOMContentLoaded', () => {
       if (data.uuid && data.refresh_token) {
         refreshTokens[data.uuid] = data.refresh_token;
       }
-      saveAccounts();
       renderAccountsPanel();
       renderPlayerBtn();
       // n'ouvre plus le panneau automatiquement
@@ -131,7 +116,6 @@ window.addEventListener('DOMContentLoaded', () => {
     window.electronAPI.onMsLoginRefreshToken && window.electronAPI.onMsLoginRefreshToken((data) => {
       if (data.uuid && data.refresh_token) {
         refreshTokens[data.uuid] = data.refresh_token;
-        saveAccounts();
       }
     });
   }
@@ -140,9 +124,8 @@ window.addEventListener('DOMContentLoaded', () => {
     playerBtn.addEventListener('click', openPanel);
   }
 
-  // Affiche le bon bouton au chargement (si tu veux persister les comptes, il faudra adapter ici)
-  renderAccountsPanel();
-  renderPlayerBtn();
+  // Chargement initial depuis le backend
+  loadAccountsFromBackend();
 
   // Bouton pour fermer le panneau
   if (closePanelBtn) {

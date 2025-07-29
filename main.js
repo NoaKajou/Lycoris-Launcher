@@ -1,4 +1,3 @@
-
 // Dépendances principales (doivent être chargées AVANT toute utilisation)
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const http = require('http');
@@ -7,10 +6,74 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
+// Vérifie si le accessToken est expiré
+function isTokenExpired(account) {
+  if (!account.expiresAt) return true;
+  return new Date(account.expiresAt) < new Date();
+}
+
+// Rafraîchit le accessToken avec le refreshToken
+async function refreshAccessToken(account) {
+  const response = await fetch('https://login.microsoftonline.com/consumers/oauth2/v2.0/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: CLIENT_ID,
+      refresh_token: account.refreshToken,
+      grant_type: 'refresh_token',
+      redirect_uri: REDIRECT_URI,
+      scope: 'XboxLive.signin offline_access openid profile'
+    })
+  });
+  const data = await response.json();
+  if (!data.access_token) throw new Error(data.error_description || 'Impossible de refresh le token');
+  account.accessToken = data.access_token;
+  account.refreshToken = data.refresh_token;
+  account.expiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString();
+  // Mets à jour le compte dans accounts.json
+  let accounts = loadAccounts();
+  const idx = accounts.findIndex(acc => acc.uuid === account.uuid);
+  if (idx !== -1) accounts[idx] = account;
+  else accounts.push(account);
+  saveAccounts(accounts);
+  return account;
+}
+
+// IPC pour récupérer tous les comptes (pour le renderer)
+ipcMain.handle('get-accounts', async () => {
+  return loadAccounts();
+});
+
+// IPC pour switcher de compte (refresh auto si besoin)
+ipcMain.handle('switch-account', async (event, uuid) => {
+  let accounts = loadAccounts();
+  const acc = accounts.find(a => a.uuid === uuid);
+  if (!acc) throw new Error('Compte introuvable');
+  if (isTokenExpired(acc)) {
+    try {
+      await refreshAccessToken(acc);
+    } catch (e) {
+      throw new Error('Refresh token échoué : ' + e.message);
+    }
+  }
+  return acc;
+});
+
+require('dotenv').config();
+
 // Pour la gestion des comptes persistants
 let ACCOUNTS_PATH;
+
 app.whenReady().then(() => {
   ACCOUNTS_PATH = path.join(app.getPath('userData'), 'accounts.json');
+  // Crée le fichier s'il n'existe pas ou s'il est vide
+  try {
+    if (!fs.existsSync(ACCOUNTS_PATH) || fs.readFileSync(ACCOUNTS_PATH, 'utf-8').trim() === '') {
+      fs.writeFileSync(ACCOUNTS_PATH, '[]', 'utf-8');
+    }
+  } catch (e) {
+    console.error('Impossible d\'initialiser accounts.json :', e);
+  }
 });
 
 function loadAccounts() {
@@ -108,11 +171,15 @@ ipcMain.on('refresh-with-token', async (event, { refresh_token }) => {
       return;
     }
     const profile = await profileRes.json();
+    // Log si le refresh_token est absent
+    if (!tokenData.refresh_token) {
+      console.warn('[WARN] Aucun refresh_token reçu pour', profile.name, profile.id);
+    }
     event.sender.send('ms-login-success', {
       username: profile.name,
       uuid: profile.id,
       avatar: `https://mc-heads.net/avatar/${profile.id}/32`,
-      refresh_token: tokenData.refresh_token
+      refresh_token: tokenData.refresh_token || ''
     });
     event.sender.send('ms-login-status', `Connecté : ${profile.name}`);
   } catch (e) {
@@ -267,9 +334,12 @@ ipcMain.on('ms-login', async (event) => {
           uuid: profile.id,
           avatar: `https://mc-heads.net/avatar/${profile.id}/32`,
           accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token,
+          refreshToken: tokenData.refresh_token || '',
           expiresAt
         };
+        if (!tokenData.refresh_token) {
+          console.warn('[WARN] Aucun refresh_token reçu pour', profile.name, profile.id);
+        }
         if (idx !== -1) {
           accounts[idx] = newAcc;
         } else {

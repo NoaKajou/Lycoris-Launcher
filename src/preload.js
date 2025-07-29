@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   close: () => ipcRenderer.send('window-close'),
   msLogin: () => ipcRenderer.send('ms-login'),
   refreshWithToken: (data) => ipcRenderer.send('refresh-with-token', data),
+  getAccounts: () => ipcRenderer.invoke('get-accounts'),
+  switchAccount: (uuid) => ipcRenderer.invoke('switch-account', uuid),
   onMsAuthCode: (callback) => ipcRenderer.on('ms-auth-code', (event, code) => callback(code)),
   onMsLoginStatus: (callback) => ipcRenderer.on('ms-login-status', (event, status) => callback(status)),
   onMsLoginSuccess: (callback) => ipcRenderer.on('ms-login-success', (event, data) => callback(data)),
