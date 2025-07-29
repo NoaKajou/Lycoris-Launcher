@@ -15,10 +15,19 @@
       <button class="win-btn win-close" title="Fermer"></button>
     </div>
   </div>
+  <div style="position: absolute; top: 46px; right: 32px; z-index: 11;">
+    <button id="ms-login-btn" class="ms-login-btn neon-translucent">Connexion</button>
+    <div id="player-btn" class="user-info-neon" style="display:none; cursor:pointer;"></div>
+    <div id="accounts-panel" class="accounts-panel">
+      <button class="close-panel-btn" id="close-accounts-panel">×</button>
+      <div id="accounts-list"></div>
+      <button class="add-account-btn" id="add-account-btn">+ Ajouter un autre compte</button>
+    </div>
+  </div>
   <h1>Bienvenue sur Lycoris Launcher</h1>
   <div style="font-family: 'Minecraftia', monospace; font-size: 2rem; color: #e67e22; margin: 18px 0;">Test police Minecraft : 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
   <p>Lancez vos applications facilement !</p>
-  <button id="ms-login-btn" class="ms-login-btn">Se connecter avec Microsoft</button>
+  <!-- Le bouton de connexion est maintenant juste sous la barre, en haut à droite -->
   <div id="ms-login-status"></div>
   <script src="renderer.js"></script>
 </body>

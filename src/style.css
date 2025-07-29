@@ -1,16 +1,164 @@
+.accounts-panel {
+  position: fixed;
+  top: 36px; /* sous la barre */
+  right: 0;
+  width: 320px;
+  height: calc(100vh - 36px);
+  background: rgba(30,32,38,0.98);
+  box-shadow: -4px 0 24px 0 #000a, 0 0 18px 4px #fff2, 0 2px 12px #2f6fed44;
+  border-left: 2px solid #fff;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(.77,0,.18,1);
+  padding: 0;
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+.accounts-panel.open {
+  transform: translateX(0);
+}
+#accounts-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 56px;
+  padding: 0;
+}
+.close-panel-btn {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-size: 2rem;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1010;
+  transition: color 0.2s;
+}
+.close-panel-btn:hover {
+  color: #e67e22;
+}
+.account-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 18px 7px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  position: relative;
+}
+.account-item:hover {
+  background: rgba(47,111,237,0.18);
+}
+.account-item .user-head {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #222;
+}
+.account-item .user-name {
+  color: #fff;
+  font-size: 1.01rem;
+  font-weight: bold;
+  text-shadow: 0 1px 8px #fff6, 0 0 2px #2f6fed;
+  letter-spacing: 1px;
+}
+
+.delete-account-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  opacity: 0.7;
+}
+.delete-account-btn:hover {
+  background: #e74c3c;
+  color: #fff;
+  opacity: 1;
+}
+.add-account-btn {
+  margin: 8px 12px 2px 12px;
+  padding: 7px 0;
+  border-radius: 8px;
+  border: 2px dashed #fff;
+  background: rgba(47,111,237,0.10);
+  color: #fff;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.add-account-btn:hover {
+  background: rgba(47,111,237,0.22);
+  border-color: #2f6fed;
+}
+.user-info-neon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 18px 6px 8px;
+  background: rgba(30, 32, 38, 0.55);
+  border-radius: 12px;
+  box-shadow: 0 0 12px 2px #fff9, 0 2px 8px #2f6fed44;
+  border: 2px solid #fff;
+  margin-right: 0;
+  margin-top: 0;
+  min-width: 90px;
+  height: 38px;
+  z-index: 12;
+  position: relative;
+  backdrop-filter: blur(6px) saturate(1.2);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+}
+.user-info-neon .user-head {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px #fff8;
+  background: #222;
+}
+.user-info-neon .user-name {
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: bold;
+  text-shadow: 0 1px 8px #fff6, 0 0 2px #2f6fed;
+  letter-spacing: 1px;
+}
+/* Bouton Microsoft */
 /* Bouton Microsoft */
 .ms-login-btn {
-  margin-top: 30px;
-  padding: 10px 24px;
-  background: #2f6fed;
+  padding: 8px 32px;
+  background: rgba(47, 111, 237, 0.18);
   color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  font-size: 1.08rem;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 2px 8px #0002;
-  transition: background 0.2s;
+  box-shadow: 0 0 8px 2px #fff8, 0 2px 8px #0002;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  backdrop-filter: blur(6px) saturate(1.2);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+  text-shadow: 0 1px 8px #fff6, 0 0 2px #2f6fed;
+}
+.ms-login-btn.neon-translucent {
+  border: 2px solid #fff;
+  box-shadow: 0 0 12px 2px #fff9, 0 2px 8px #2f6fed44;
+  background: rgba(47, 111, 237, 0.18);
+  color: #fff;
+}
+.ms-login-btn.neon-translucent:hover {
+  background: rgba(47, 111, 237, 0.32);
+  border-color: #fff;
+  box-shadow: 0 0 18px 4px #fff, 0 2px 12px #2f6fed88;
 }
 .ms-login-btn:hover {
   background: #1a4fa3;
