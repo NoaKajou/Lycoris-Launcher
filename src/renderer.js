@@ -53,11 +53,15 @@ window.addEventListener('DOMContentLoaded', () => {
       // Suppression du compte (nécessite une IPC à ajouter côté main.js si on veut vraiment supprimer côté backend)
       item.querySelector('.delete-account-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
-        // TODO: Ajouter une IPC pour supprimer côté backend, ici on fait juste côté UI
-        accounts = accounts.filter(a => a.uuid !== acc.uuid);
-        renderAccountsPanel();
-        renderPlayerBtn();
-        msStatus.textContent = 'Suppression locale (à synchroniser côté backend)';
+        // Suppression synchronisée avec le backend
+        try {
+          accounts = await window.electronAPI.deleteAccount(acc.uuid);
+          renderAccountsPanel();
+          renderPlayerBtn();
+          msStatus.textContent = 'Compte supprimé.';
+        } catch (err) {
+          msStatus.textContent = 'Erreur lors de la suppression : ' + err.message;
+        }
       });
       accountsList.appendChild(item);
     });
@@ -92,6 +96,11 @@ window.addEventListener('DOMContentLoaded', () => {
     window.electronAPI.onMsLoginStatus((status) => {
       msStatus.textContent = status;
       console.log('[DEBUG] ms-login-status:', status);
+      if (status && status.toLowerCase().includes('annulée')) {
+        // Réinitialise l'UI si l'utilisateur annule ou ferme la fenêtre de login
+        msBtn.style.display = '';
+        playerBtn.style.display = 'none';
+      }
     });
     window.electronAPI.onMsLoginSuccess((data) => {
       // Ajoute ou met à jour le compte dans la liste

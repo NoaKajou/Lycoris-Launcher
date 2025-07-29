@@ -216,6 +216,7 @@ const OAUTH_URL = `https://login.microsoftonline.com/consumers/oauth2/v2.0/autho
 ipcMain.on('ms-login', async (event) => {
   // Ouvre la fenêtre de login Microsoft
   let accounts = loadAccounts();
+  let loginCompleted = false;
   let authWin = new BrowserWindow({
     backgroundColor: '#222222',
     frame: true,
@@ -241,7 +242,7 @@ ipcMain.on('ms-login', async (event) => {
       res.end('<html><body>Connexion réussie, vous pouvez fermer cette fenêtre.</body></html>');
       setTimeout(() => {
         authWin.close();
-        server.close();
+        try { server.close(); } catch (e) {}
       }, 1000);
 
       // Échange le code contre un access token Microsoft
@@ -314,6 +315,7 @@ ipcMain.on('ms-login', async (event) => {
         if (!mcData.access_token) {
           event.sender.send('ms-login-status', 'Erreur Minecraft : ' + (mcData.errorMessage || mcData.error || JSON.stringify(mcData)));
           return;
+        loginCompleted = true;
         }
 
         // Récupère le profil Minecraft
@@ -346,16 +348,33 @@ ipcMain.on('ms-login', async (event) => {
           accounts.push(newAcc);
         }
         saveAccounts(accounts);
+        loginCompleted = true;
         event.sender.send('ms-login-success', newAcc);
         event.sender.send('ms-login-status', `Connecté : ${profile.name}`);
       } catch (e) {
         event.sender.send('ms-login-status', 'Erreur lors de la connexion : ' + e.message);
       }
+    } else if (reqUrl.pathname === '/auth' && reqUrl.query.error) {
+      // L'utilisateur a explicitement refusé ou annulé la connexion
+      res.end('<html><body>Connexion annulée. Vous pouvez fermer cette fenêtre.</body></html>');
+      setTimeout(() => {
+        authWin.close();
+        try { server.close(); } catch (e) {}
+        event.sender.send('ms-login-status', 'Connexion annulée ou refusée.');
+      }, 1000);
     } else {
       res.end('');
     }
   });
   server.listen(3000);
+
+  // Détecte la fermeture de la fenêtre de login
+  authWin.on('closed', () => {
+    if (!loginCompleted) {
+      try { server.close(); } catch (e) {}
+      event.sender.send('ms-login-status', 'Connexion annulée ou fermée.');
+    }
+  });
 });
 
 ipcMain.on('window-minimize', () => {
@@ -372,6 +391,14 @@ ipcMain.on('window-maximize', () => {
 });
 ipcMain.on('window-close', () => {
   if (win) win.close();
+});
+
+// Suppression d'un compte (synchronisée)
+ipcMain.handle('delete-account', async (event, uuid) => {
+  let accounts = loadAccounts();
+  accounts = accounts.filter(acc => acc.uuid !== uuid);
+  saveAccounts(accounts);
+  return accounts;
 });
 
 app.whenReady().then(() => {
