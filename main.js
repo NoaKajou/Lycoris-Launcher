@@ -1,10 +1,13 @@
 // Dépendances principales (doivent être chargées AVANT toute utilisation)
+
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const http = require('http');
 const url = require('url');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+const { loadKey } = require('./keyManager');
+const { encryptJSON, decryptJSON } = require('./cryptoUtils');
 
 // Vérifie si le accessToken est expiré
 function isTokenExpired(account) {
@@ -62,16 +65,30 @@ ipcMain.handle('switch-account', async (event, uuid) => {
 require('dotenv').config();
 
 // Pour la gestion des comptes persistants
+
 let ACCOUNTS_PATH;
+let ENCRYPTED = true; // Active le chiffrement
+let key;
 
 
 // Initialisation unique de la fenêtre principale et de l'auto-login
+
 app.whenReady().then(async () => {
   ACCOUNTS_PATH = path.join(app.getPath('userData'), 'accounts.json');
+  key = loadKey();
+  if (ENCRYPTED) {
+    console.log('[SECURE] Le chiffrement AES des comptes est ACTIVÉ.');
+  } else {
+    console.log('[SECURE] Le chiffrement AES des comptes est DÉSACTIVÉ.');
+  }
   // Crée le fichier s'il n'existe pas ou s'il est vide
   try {
     if (!fs.existsSync(ACCOUNTS_PATH) || fs.readFileSync(ACCOUNTS_PATH, 'utf-8').trim() === '') {
-      fs.writeFileSync(ACCOUNTS_PATH, '[]', 'utf-8');
+      if (ENCRYPTED) {
+        fs.writeFileSync(ACCOUNTS_PATH, encryptJSON([], key), 'utf-8');
+      } else {
+        fs.writeFileSync(ACCOUNTS_PATH, '[]', 'utf-8');
+      }
     }
   } catch (e) {
     console.error('Impossible d\'initialiser accounts.json :', e);
@@ -111,13 +128,22 @@ app.on('activate', function () {
 
 function loadAccounts() {
   try {
-    return JSON.parse(fs.readFileSync(ACCOUNTS_PATH, 'utf-8'));
+    const raw = fs.readFileSync(ACCOUNTS_PATH, 'utf-8');
+    if (ENCRYPTED) {
+      return decryptJSON(raw, key);
+    } else {
+      return JSON.parse(raw);
+    }
   } catch (e) {
     return [];
   }
 }
 function saveAccounts(accounts) {
-  fs.writeFileSync(ACCOUNTS_PATH, JSON.stringify(accounts, null, 2), 'utf-8');
+  if (ENCRYPTED) {
+    fs.writeFileSync(ACCOUNTS_PATH, encryptJSON(accounts, key), 'utf-8');
+  } else {
+    fs.writeFileSync(ACCOUNTS_PATH, JSON.stringify(accounts, null, 2), 'utf-8');
+  }
 }
 
 
