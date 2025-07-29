@@ -1,3 +1,10 @@
+/* Minecraft font: Minecraftia (public domain) */
+@font-face {
+  font-family: 'Minecraftia';
+  src: url('Minecraftia-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 .accounts-panel {
   position: fixed;
   top: 36px; /* sous la barre */

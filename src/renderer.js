@@ -112,9 +112,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       // Debug : log le refresh_token reçu
       console.log('[DEBUG] onMsLoginSuccess:', data.username, 'uuid:', data.uuid, 'refresh_token:', data.refresh_token);
-      if (!data.refresh_token) {
-        alert('Alerte : Le refresh_token est manquant pour ce compte !\nLa reconnexion automatique ne fonctionnera pas.\nReconnecte-toi ou vérifie la configuration côté main.js.');
-      }
+      // Suppression de l'alerte si le refresh_token est manquant
       if (data.uuid && data.refresh_token) {
         refreshTokens[data.uuid] = data.refresh_token;
       }

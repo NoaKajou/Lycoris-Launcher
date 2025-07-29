@@ -64,7 +64,9 @@ require('dotenv').config();
 // Pour la gestion des comptes persistants
 let ACCOUNTS_PATH;
 
-app.whenReady().then(() => {
+
+// Initialisation unique de la fenêtre principale et de l'auto-login
+app.whenReady().then(async () => {
   ACCOUNTS_PATH = path.join(app.getPath('userData'), 'accounts.json');
   // Crée le fichier s'il n'existe pas ou s'il est vide
   try {
@@ -74,6 +76,37 @@ app.whenReady().then(() => {
   } catch (e) {
     console.error('Impossible d\'initialiser accounts.json :', e);
   }
+
+  // Auto-login: tente de rafraîchir le premier compte avec un refresh_token
+  let accounts = loadAccounts();
+  if (accounts.length > 0) {
+    // Prend le premier compte avec un refresh_token valide
+    const acc = accounts.find(a => a.refreshToken);
+    if (acc) {
+      console.log('[DEBUG] Auto-login: found refresh_token for', acc.username || acc.uuid, 'token:', acc.refreshToken);
+      try {
+        const refreshed = await refreshAccessToken(acc);
+        // On crée la fenêtre puis on envoie l'event
+        createWindow();
+        if (win) {
+          win.webContents.once('did-finish-load', () => {
+            win.webContents.send('ms-login-success', refreshed);
+            win.webContents.send('ms-login-status', `Auto-connected: ${refreshed.username}`);
+          });
+        }
+        return;
+      } catch (e) {
+        console.warn('Auto-login failed:', e.message);
+      }
+    } else {
+      console.log('[DEBUG] Auto-login: no account with refresh_token found');
+    }
+  }
+  createWindow();
+});
+
+app.on('activate', function () {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
 function loadAccounts() {
@@ -398,16 +431,10 @@ ipcMain.handle('delete-account', async (event, uuid) => {
   let accounts = loadAccounts();
   accounts = accounts.filter(acc => acc.uuid !== uuid);
   saveAccounts(accounts);
+
   return accounts;
 });
 
-app.whenReady().then(() => {
-  createWindow();
-
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
-});
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
