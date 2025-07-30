@@ -1,14 +1,20 @@
+    <button id="testTokenBtn" style="margin-left:1em;">Tester le token</button>
+    <div id="tokenTestResult" style="margin-top:0.5em;color:#ffb;display:none;"></div>
 
 <h2>Mon Skin Minecraft</h2>
 <div style="display:flex;flex-direction:column;align-items:center;gap:1em;">
   <canvas id="skinCanvas" width="300" height="400" style="background:#181b20;border-radius:12px;"></canvas>
-  <div style="display:flex;gap:1em;">
+  <div style="display:flex;gap:1em;align-items:center;">
     <label>Modèle :
       <select id="modelSelect">
         <option value="default">Classic</option>
         <option value="slim">Slim</option>
       </select>
     </label>
+    <input type="file" id="skinFileInput" accept=".png" style="margin-left:1em;">
+    <button id="applySkinBtn" style="margin-left:1em;">Appliquer</button>
   </div>
+  <div id="skinGallery" style="margin-top:1em;max-width:350px;width:100%;display:flex;flex-wrap:wrap;gap:0.5em;"></div>
 </div>
-<!-- La logique skinview3d est désormais dans js/skins.js -->
+<div id="skinStatus" style="margin-top:1em;color:#e74c3c;"></div>
+<!-- La logique skinview3d et skin upload est dans js/skins.js -->

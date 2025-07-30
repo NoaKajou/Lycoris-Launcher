@@ -44,22 +44,54 @@ async function refreshAccessToken(account) {
 
 // IPC pour récupérer tous les comptes (pour le renderer)
 ipcMain.handle('get-accounts', async () => {
-  return loadAccounts();
+  let accounts = loadAccounts();
+  accounts.forEach(acc => {
+    if (acc.accessToken) {
+      console.log('[DEBUG] Token envoyé (get-accounts):', acc.accessToken);
+    }
+  });
+  // Refresh tokens if needed for all accounts
+  for (const acc of accounts) {
+    if (isTokenExpired(acc)) {
+      try {
+        await refreshAccessToken(acc);
+      } catch (e) {
+        // Ignore refresh errors here, will be handled on use
+      }
+    }
+  }
+  saveAccounts(accounts);
+  // Always return accounts with accessToken (camelCase)
+  return accounts.map(acc => ({
+    ...acc,
+    accessToken: acc.accessToken || acc.access_token,
+    // Remove snake_case if present
+    access_token: undefined
+  }));
 });
 
 // IPC pour switcher de compte (refresh auto si besoin)
 ipcMain.handle('switch-account', async (event, uuid) => {
+  if (acc && acc.accessToken) {
+    console.log('[DEBUG] Token envoyé (switch-account):', acc.accessToken);
+  }
   let accounts = loadAccounts();
   const acc = accounts.find(a => a.uuid === uuid);
   if (!acc) throw new Error('Compte introuvable');
   if (isTokenExpired(acc)) {
     try {
       await refreshAccessToken(acc);
+      saveAccounts(accounts);
     } catch (e) {
       throw new Error('Refresh token échoué : ' + e.message);
     }
   }
-  return acc;
+  // Always return account with accessToken (camelCase)
+  return {
+    ...acc,
+    accessToken: acc.accessToken || acc.access_token,
+    access_token: undefined
+  };
 });
 
 require('dotenv').config();
@@ -255,12 +287,17 @@ ipcMain.on('refresh-with-token', async (event, { refresh_token }) => {
     if (!tokenData.refresh_token) {
       console.warn('[WARN] Aucun refresh_token reçu pour', profile.name, profile.id);
     }
-    event.sender.send('ms-login-success', {
+    const newAcc = {
       username: profile.name,
       uuid: profile.id,
       avatar: `https://mc-heads.net/avatar/${profile.id}/32`,
-      refresh_token: tokenData.refresh_token || ''
-    });
+      accessToken: mcData.access_token,
+      refreshToken: tokenData.refresh_token || ''
+    };
+    if (newAcc.accessToken) {
+      console.log('[DEBUG] Token envoyé (ms-login-success):', newAcc.accessToken);
+    }
+    event.sender.send('ms-login-success', newAcc);
     event.sender.send('ms-login-status', `Connecté : ${profile.name}`);
   } catch (e) {
     event.sender.send('ms-login-status', 'Erreur lors du refresh : ' + e.message);
@@ -430,6 +467,12 @@ ipcMain.on('ms-login', async (event) => {
         saveAccounts(accounts);
         loginCompleted = true;
         event.sender.send('ms-login-success', newAcc);
+        // Always send accessToken (camelCase) to renderer
+        event.sender.send('ms-login-success', {
+          ...newAcc,
+          accessToken: newAcc.accessToken || newAcc.access_token,
+          access_token: undefined
+        });
         event.sender.send('ms-login-status', `Connecté : ${profile.name}`);
       } catch (e) {
         event.sender.send('ms-login-status', 'Erreur lors de la connexion : ' + e.message);

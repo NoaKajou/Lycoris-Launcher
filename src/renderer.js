@@ -57,6 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
         try {
           const accData = await window.electronAPI.switchAccount(acc.uuid);
           currentAccount = accData;
+          window.currentAccount = currentAccount; // always update global
           // Sauvegarde l'UUID du compte utilisé côté main process
           window.electronAPI.setLastAccount && window.electronAPI.setLastAccount(accData.uuid);
           msStatus.textContent = `Connecté : ${accData.username}`;
