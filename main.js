@@ -72,11 +72,11 @@ ipcMain.handle('get-accounts', async () => {
 
 // IPC pour switcher de compte (refresh auto si besoin)
 ipcMain.handle('switch-account', async (event, uuid) => {
+  let accounts = loadAccounts();
+  const acc = accounts.find(a => a.uuid === uuid);
   if (acc && acc.accessToken) {
     console.log('[DEBUG] Token envoyé (switch-account):', acc.accessToken);
   }
-  let accounts = loadAccounts();
-  const acc = accounts.find(a => a.uuid === uuid);
   if (!acc) throw new Error('Compte introuvable');
   if (isTokenExpired(acc)) {
     try {
