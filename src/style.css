@@ -1,4 +1,4 @@
-.feather-logo-icon {
+.lycoris-logo-icon {
   font-family: FontAwesome;
   font-size: 1.5em;
   color: #fff;
@@ -6,13 +6,13 @@
   display: inline-block;
   vertical-align: middle;
 }
-.feather-logo-icon img {
+.lycoris-logo-icon img {
   height: 40px;
   width: 40px;
   display: block;
 }
 
-.feather-header {
+.lycoris-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27,7 +27,7 @@
   border-bottom: 1.5px solid #222;
   box-shadow: 0 2px 8px #0002;
 }
-.feather-logo {
+.lycoris-logo {
   display: flex;
   align-items: center;
   font-weight: bold;
@@ -37,26 +37,26 @@
   margin-left: 12px;
   text-transform: uppercase;
 }
-.feather-title {
+.lycoris-title {
   font-family: 'Minecraftia', monospace;
   font-size: 1.1em;
   margin-left: 4px;
 }
-.feather-nav {
+.lycoris-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 0.5px;
   margin-left: 0;
   width: 100%;
 }
-.feather-nav-btn {
+.lycoris-nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0;
   background: linear-gradient(90deg, #23272e 0%, #23272e 100%);
-  border: 1.5px solid #23272e;
+  border: none;
   color: #e0e0e0;
   font-size: 1.08em;
   font-family: inherit;
@@ -70,33 +70,32 @@
   outline: none;
   border-right: none;
 }
-.feather-nav-btn:first-child {
+.lycoris-nav-btn:first-child {
   border-radius: 10px 0 0 10px;
 }
-.feather-nav-btn:last-child {
+.lycoris-nav-btn:last-child {
   border-radius: 0 10px 10px 0;
-  border-right: 1.5px solid #23272e;
 }
-.feather-nav-btn:focus {
+.lycoris-nav-btn:focus {
   outline: none;
   border-color: #23272e;
   box-shadow: none;
 }
 
-.feather-nav-btn.active {
+.lycoris-nav-btn.active {
   background: #e74c3c33 !important;
   color: #fff;
-  border-color: #e74c3c;
+  border: 2px solid #e74c3c;
   z-index: 2;
 }
-.feather-nav-btn:hover {
+.lycoris-nav-btn:hover {
   background: linear-gradient(90deg, #23272e 0%, #23272e 100%);
   color: #fff;
   border-color: #23272e;
   box-shadow: 0 1px 4px #0002;
   z-index: 2;
 }
-.feather-nav-icon {
+.lycoris-nav-icon {
   color: #fff !important;
   font-family: FontAwesome;
   font-size: 1.35em;
@@ -105,7 +104,7 @@
   filter: drop-shadow(0 1px 2px #0008);
   margin-right: 2px;
 }
-.feather-account {
+.lycoris-account {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -141,9 +140,9 @@
   padding: 0 0 0 0;
 }
 @media (max-width: 700px) {
-  .feather-nav-btn { padding: 0 8px; font-size: 0.95em; }
-  .feather-logo { font-size: 1em; }
-  .feather-title { font-size: 0.95em; }
+  .lycoris-nav-btn { padding: 0 8px; font-size: 0.95em; }
+  .lycoris-logo { font-size: 1em; }
+  .lycoris-title { font-size: 0.95em; }
   #content { margin-top: 56px; }
 }
 /* Minecraft font: Minecraftia (public domain) */

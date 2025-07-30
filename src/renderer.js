@@ -76,14 +76,23 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderPlayerBtn() {
-    if (accounts.length > 0) {
-      // Affiche le compte courant si défini, sinon le dernier
+    // Supprime complètement le bouton joueur du DOM si aucun compte n'est connecté
+    if (accounts.length > 0 && (currentAccount || accounts[accounts.length - 1])) {
       const acc = currentAccount || accounts[accounts.length - 1];
-      playerBtn.innerHTML = `<img src="${acc.avatar}" alt="skin" class="user-head"><span class="user-name">${acc.username}</span>`;
-      playerBtn.style.display = 'flex';
-      msBtn.style.display = 'none';
+      if (acc && acc.username && acc.avatar) {
+        playerBtn.innerHTML = `<img src="${acc.avatar}" alt="skin" class="user-head"><span class="user-name">${acc.username}</span>`;
+        playerBtn.style.display = 'flex';
+        msBtn.style.display = 'none';
+        if (!playerBtn.parentNode) {
+          // Si le bouton a été supprimé, on le remet
+          document.querySelector('.lycoris-account').insertBefore(playerBtn, msBtn);
+        }
+      } else {
+        if (playerBtn.parentNode) playerBtn.parentNode.removeChild(playerBtn);
+        msBtn.style.display = '';
+      }
     } else {
-      playerBtn.style.display = 'none';
+      if (playerBtn.parentNode) playerBtn.parentNode.removeChild(playerBtn);
       msBtn.style.display = '';
     }
   }

@@ -7,29 +7,29 @@
   <link rel="stylesheet" href="style.css">
 </maishead>
 <body>
-  <header class="feather-header">
-    <div class="feather-logo">
-      <span class="feather-logo-icon"><img src="logo.png" alt="Logo" /></span>
-      <span class="feather-title">LYCORIS LAUNCHER</span>
+  <header class="lycoris-header">
+    <div class="lycoris-logo">
+      <span class="lycoris-logo-icon"><img src="logo.png" alt="Logo" /></span>
+      <span class="lycoris-title">LYCORIS LAUNCHER</span>
     </div>
-    <nav class="feather-nav">
-      <button class="feather-nav-btn" id="btn-play">
-        <span class="feather-nav-icon">
+    <nav class="lycoris-nav">
+      <button class="lycoris-nav-btn" id="btn-play">
+        <span class="lycoris-nav-icon">
           <img src="play.svg" alt="Play" style="height:1.3em;width:1.3em;vertical-align:middle;" />
         </span>
       </button>
-      <button class="feather-nav-btn" id="btn-mods">
-        <span class="feather-nav-icon">
-          <img src="mods.svg" alt="Mods" style="height:1.3em;width:1.3em;vertical-align:middle;" />
-        </span>
-      </button>
-      <button class="feather-nav-btn" id="btn-skins">
-        <span class="feather-nav-icon">
+      <button class="lycoris-nav-btn" id="btn-mods">
+        <span class="lycoris-nav-icon">
           <img src="skins.svg" alt="Skins" style="height:1.3em;width:1.3em;vertical-align:middle;" />
         </span>
       </button>
+      <button class="lycoris-nav-btn" id="btn-skins">
+        <span class="lycoris-nav-icon">
+          <img src="mods.svg" alt="Mods" style="height:1.3em;width:1.3em;vertical-align:middle;" />
+        </span>
+      </button>
     </nav>
-    <div class="feather-account">
+    <div class="lycoris-account">
       <div id="player-btn" class="user-info-neon" style="display:none; cursor:pointer;"></div>
       <button id="ms-login-btn" class="ms-login-btn neon-translucent">Connexion</button>
       <div id="accounts-panel" class="accounts-panel">
@@ -51,21 +51,7 @@
   <div id="ms-login-status"></div>
   <script src="renderer.js"></script>
   <script src="js/router.js"></script>
-  <script>
-    // Change 'play' par 'mods' ou 'skins' selon la page affichée
-    let currentPage = 'play'; // À adapter dynamiquement selon ta logique
-    function setActiveNav(page) {
-      document.getElementById('btn-play').classList.remove('active');
-      document.getElementById('btn-mods').classList.remove('active');
-      document.getElementById('btn-skins').classList.remove('active');
-      if(page === 'play') document.getElementById('btn-play').classList.add('active');
-      if(page === 'mods') document.getElementById('btn-mods').classList.add('active');
-      if(page === 'skins') document.getElementById('btn-skins').classList.add('active');
-    }
-    setActiveNav(currentPage);
-    // Exemple : à appeler lors d'un changement de page
-    // setActiveNav('mods');
-  </script>
+  <script src="js/nav.js"></script>
   <!-- Styles déplacés dans style.css -->
 </body>
 </html>
