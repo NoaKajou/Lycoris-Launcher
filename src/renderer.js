@@ -18,6 +18,12 @@ window.addEventListener('DOMContentLoaded', () => {
   // Nouvelle gestion : tout vient du backend (main process)
   let accounts = [];
   let currentAccount = null;
+  // Expose globalement pour d'autres pages/scripts
+  Object.defineProperty(window, 'currentAccount', {
+    get: () => currentAccount,
+    set: v => { currentAccount = v; },
+    configurable: true
+  });
   // Restaure le dernier compte utilisé depuis localStorage
   const lastAccountUUID = localStorage.getItem('lastAccountUUID');
 
@@ -27,6 +33,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (lastAccountUUID) {
       const acc = accounts.find(a => a.uuid === lastAccountUUID);
       if (acc) currentAccount = acc;
+      window.currentAccount = currentAccount;
     }
     renderAccountsPanel();
     renderPlayerBtn();
@@ -133,6 +140,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       // Définit ce compte comme courant et sauvegarde l'UUID côté main process
       currentAccount = data;
+      window.currentAccount = currentAccount;
       window.electronAPI.setLastAccount && window.electronAPI.setLastAccount(data.uuid);
       renderAccountsPanel();
       renderPlayerBtn();

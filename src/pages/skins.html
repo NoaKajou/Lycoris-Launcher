@@ -1,9 +1,14 @@
+
 <h2>Mon Skin Minecraft</h2>
-<div id="skin-viewer">
-  <img id="skin-img" src="" alt="Skin" style="width:128px;height:256px;display:block;margin:auto;">
+<div style="display:flex;flex-direction:column;align-items:center;gap:1em;">
+  <canvas id="skinCanvas" width="300" height="400" style="background:#181b20;border-radius:12px;"></canvas>
+  <div style="display:flex;gap:1em;">
+    <label>Modèle :
+      <select id="modelSelect">
+        <option value="default">Classic</option>
+        <option value="slim">Slim</option>
+      </select>
+    </label>
+  </div>
 </div>
-<div id="capes-section">
-  <h3>Mes capes</h3>
-  <ul id="capes-list"></ul>
-  <button id="change-cape-btn">Changer de cape</button>
-</div>
+<!-- La logique skinview3d est désormais dans js/skins.js -->
