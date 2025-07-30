@@ -72,127 +72,128 @@
   let viewer;
   function getUUID() {
     if (window.currentAccount && window.currentAccount.uuid) return window.currentAccount.uuid;
-    if (window.accounts && window.accounts.length > 0) return window.accounts[0].uuid;
-    if (localStorage.getItem('lastAccountUUID')) return localStorage.getItem('lastAccountUUID');
     return null;
   }
 
   function getAccessToken() {
     if (window.currentAccount && window.currentAccount.accessToken) return window.currentAccount.accessToken;
-    if (window.accounts && window.accounts.length > 0 && window.accounts[0].accessToken) return window.accounts[0].accessToken;
     return null;
   }
 
-  // --- Gestion de la galerie de skins locaux ---
-  const skinGallery = document.getElementById('skinGallery');
+  // --- Suppression de la galerie de skins locaux ---
   const skinStatus = document.getElementById('skinStatus');
-  const { ipcRenderer } = window.require ? window.require('electron') : {};
-
-  // Utilitaire pour lire les skins locaux (via preload ou IPC)
-  async function listLocalSkins() {
-    if (window.electronAPI && window.electronAPI.listSkins) {
-      return await window.electronAPI.listSkins();
-    }
-    // Fallback : rien
-    return [];
-  }
-
-  async function refreshSkinGallery() {
-    skinGallery.innerHTML = '';
-    const skins = await listLocalSkins();
-    skins.forEach(skin => {
-      const div = document.createElement('div');
-      div.style = 'border:1px solid #333;border-radius:6px;padding:4px;cursor:pointer;background:#222;';
-      div.title = skin.name;
-      div.innerHTML = `<img src="${skin.path}" alt="${skin.name}" style="width:48px;height:48px;display:block;margin:auto;">`;
-      div.addEventListener('click', () => {
-        // Charge le skin dans l'aperçu
-        loadSkinFromFile(skin.path, skin.variant || 'default');
-        document.getElementById('modelSelect').value = skin.variant || 'default';
-      });
-      skinGallery.appendChild(div);
-    });
-  }
+  // ...existing code...
 
   // --- Aperçu d'un skin importé (fichier local) ---
   let importedSkinFile = null;
-  async function loadSkinFromFile(filePathOrBlob, variant) {
-    if (!window.skinview3d) return;
-    if (!viewer) {
-      viewer = new skinview3d.SkinViewer({
-        canvas: document.getElementById("skinCanvas"),
-        width: 300,
-        height: 400,
-        skin: filePathOrBlob,
-        model: variant || 'default'
-      });
-      viewer.controls.enableZoom = false;
-      viewer.controls.enableRotate = true;
-    } else {
-      viewer.loadSkin(filePathOrBlob, variant || 'default');
-    }
-    viewer.loadCape(null);
-  }
+async function loadSkinFromFile(filePathOrBlob, variant) {
+  if (!window.skinview3d) return;
+  resetViewer(filePathOrBlob, variant || 'default');
+}
 
-  async function loadSkin(uuid, model = "default", capeUrl = null) {
-    if (!uuid) return;
-    try {
-      const res = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
-      const data = await res.json();
-      const base64 = data.properties[0].value;
-      const decoded = JSON.parse(atob(base64));
-      let skinUrl = decoded.textures.SKIN?.url;
-      if (skinUrl && skinUrl.startsWith('http://')) skinUrl = skinUrl.replace('http://', 'https://');
-      if (!viewer) {
-        viewer = new skinview3d.SkinViewer({
-          canvas: document.getElementById("skinCanvas"),
-          width: 300,
-          height: 400,
-          skin: skinUrl,
-          model: model
-        });
-        viewer.controls.enableZoom = false;
-        viewer.controls.enableRotate = true;
-      } else {
-        viewer.loadSkin(skinUrl, model);
-      }
-      viewer.loadCape(null);
-    } catch (e) {
-      console.error('Erreur chargement skin:', e);
-    }
+
+function resetViewer(skinUrl, model) {
+  if (viewer) {
+    viewer.dispose?.();
+    viewer = null;
   }
+  viewer = new skinview3d.SkinViewer({
+    canvas: document.getElementById("skinCanvas"),
+    width: 300,
+    height: 400,
+    skin: skinUrl,
+    model: model
+  });
+  viewer.controls.enableZoom = false;
+  viewer.controls.enableRotate = true;
+  viewer.loadCape(null);
+}
+
+async function loadSkin(uuid, model = "default", capeUrl = null) {
+  if (!uuid) return;
+  try {
+    const res = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
+    const data = await res.json();
+    const base64 = data.properties[0].value;
+    const decoded = JSON.parse(atob(base64));
+    let skinUrl = decoded.textures.SKIN?.url;
+    if (skinUrl && skinUrl.startsWith('http://')) skinUrl = skinUrl.replace('http://', 'https://');
+    if (skinUrl) {
+      skinUrl += `?t=${Date.now()}`;
+    }
+    resetViewer(skinUrl, model);
+  } catch (e) {
+    console.error('Erreur chargement skin:', e);
+  }
+}
 
   // Capes fictives (à remplacer par tes vraies URLs dynamiques)
 
 
   // Fonction pour charger le skin du compte courant (avec cape Mojang active si dispo)
-  function loadCurrentAccountSkin() {
-    const uuid = getUUID();
-    if (uuid) {
-      console.debug('[skins.js] UUID du joueur ciblé :', uuid);
-      loadSkin(uuid, document.getElementById("modelSelect").value, null);
-    }
+async function loadCurrentAccountSkin() {
+  // Attend que le canvas et le select soient prêts
+  const canvas = await waitForElm("#skinCanvas");
+  const modelSelect = await waitForElm("#modelSelect");
+  if (!canvas || !canvas.getContext) {
+    console.warn("Canvas non disponible, attente du DOM...");
+    return;
   }
+  const uuid = getUUID();
+  if (uuid) {
+    console.debug('[skins.js] UUID du joueur ciblé :', uuid);
+    const model = modelSelect?.value || "default";
+    loadSkin(uuid, model, null);
+  }
+}
 
   // (Suppression de toute la logique d'affichage des capes)
 
 
-  // Initialisation : preview du skin du compte
-  loadCurrentAccountSkin();
 
-  // Preview dynamique si changement de compte ou modèle
-  let lastUUID = getUUID();
-  setInterval(() => {
-    const currentUUID = getUUID();
-    if (currentUUID !== lastUUID) {
-      lastUUID = currentUUID;
-      loadCurrentAccountSkin();
-    }
-  }, 1000);
+
+  // Initialisation : preview du skin du compte uniquement si un compte courant existe
+  if (window.currentAccount && window.currentAccount.uuid) {
+    await loadCurrentAccountSkin();
+  }
+
+  // Le bouton joueur n'a plus besoin de recharger le skin, il ouvre juste le panneau
+
+
+
+  // Ajoute un listener IPC pour détecter le changement de compte
+async function forceReloadCurrentAccountSkin(newAccount) {
+  window.currentAccount = newAccount;
+  importedSkinFile = null;
+  if (viewer) {
+    try { viewer.dispose && viewer.dispose(); } catch (e) {}
+    viewer = null;
+  }
+  await loadCurrentAccountSkin();
+}
+
+  // Expose la fonction pour le main process ou preload
+  window.forceReloadCurrentAccountSkin = forceReloadCurrentAccountSkin;
+
+  if (window.electronAPI && window.electronAPI.onSwitchAccount) {
+    window.electronAPI.onSwitchAccount(forceReloadCurrentAccountSkin);
+  } else if (window.require) {
+    // Fallback pour Electron context bridge non utilisé : écoute l'IPC manuellement
+    try {
+      const { ipcRenderer } = window.require('electron');
+      ipcRenderer.on('switch-account', (event, newAccount) => {
+        if (newAccount && newAccount.uuid) {
+          forceReloadCurrentAccountSkin(newAccount);
+        }
+      });
+    } catch (e) {}
+  }
+
+  // Preview dynamique uniquement lors d'un changement de modèle
   document.getElementById("modelSelect").addEventListener("change", (e) => {
     if (importedSkinFile) {
       loadSkinFromFile(importedSkinFile, e.target.value);
-    } else {
+    } else if (window.currentAccount && window.currentAccount.uuid) {
       loadCurrentAccountSkin();
     }
   });
@@ -241,16 +242,7 @@
       });
       if (res.status === 200) {
         skinStatus.textContent = 'Skin appliqué avec succès !';
-        // Sauvegarde locale (via preload/IPC)
-        if (window.electronAPI && window.electronAPI.saveSkin) {
-          const arrayBuffer = await importedSkinFile.arrayBuffer();
-          await window.electronAPI.saveSkin({
-            name: importedSkinFile.name,
-            data: Array.from(new Uint8Array(arrayBuffer)),
-            variant
-          });
-        }
-        refreshSkinGallery();
+        // ...existing code...
       } else {
         const err = await res.json().catch(() => ({}));
         skinStatus.textContent = 'Erreur API : ' + (err.errorMessage || err.error || res.status);
@@ -264,16 +256,23 @@
   if (window.electronAPI && window.electronAPI.getAccounts) {
     try {
       const accounts = await window.electronAPI.getAccounts();
-      window.accounts = accounts;
+      const lastUUID = localStorage.getItem('lastAccountUUID');
       if (accounts && accounts.length > 0) {
-        window.currentAccount = accounts.find(acc => acc.uuid === localStorage.getItem('lastAccountUUID')) || accounts[0];
+        if (lastUUID) {
+          const found = accounts.find(acc => acc.uuid === lastUUID);
+          window.currentAccount = found || null;
+        } else {
+          window.currentAccount = null;
+        }
+      } else {
+        window.currentAccount = null;
       }
     } catch (e) {
-      console.warn('[SKINS] Impossible de charger les comptes:', e);
+      window.currentAccount = null;
+      console.warn('[SKINS] Impossible de charger le compte courant:', e);
     }
   }
 
-  // Affiche la galerie au chargement
-  refreshSkinGallery();
+  // ...existing code...
 
 })();

@@ -34,6 +34,10 @@ window.addEventListener('DOMContentLoaded', () => {
       const acc = accounts.find(a => a.uuid === lastAccountUUID);
       if (acc) currentAccount = acc;
       window.currentAccount = currentAccount;
+      // Recharge le skin si la fonction existe
+      if (typeof window.forceReloadCurrentAccountSkin === 'function' && currentAccount) {
+        window.forceReloadCurrentAccountSkin(currentAccount);
+      }
     }
     renderAccountsPanel();
     renderPlayerBtn();
@@ -58,6 +62,10 @@ window.addEventListener('DOMContentLoaded', () => {
           const accData = await window.electronAPI.switchAccount(acc.uuid);
           currentAccount = accData;
           window.currentAccount = currentAccount; // always update global
+          // Recharge le skin si la fonction existe
+          if (typeof window.forceReloadCurrentAccountSkin === 'function' && currentAccount) {
+            window.forceReloadCurrentAccountSkin(currentAccount);
+          }
           // Sauvegarde l'UUID du compte utilisé côté main process
           window.electronAPI.setLastAccount && window.electronAPI.setLastAccount(accData.uuid);
           msStatus.textContent = `Connecté : ${accData.username}`;
