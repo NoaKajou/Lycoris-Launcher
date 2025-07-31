@@ -106,13 +106,15 @@ ipcMain.handle('get-accounts', async () => {
     }
   }
   saveAccounts(accounts);
-  // Always return accounts with accessToken (camelCase)
-  const result = accounts.map(acc => ({
+  // Met à jour l'avatar de tous les comptes existants pour garantir l'usage de l'UUID Minecraft
+  accounts = accounts.map(acc => ({
     ...acc,
+    avatar: acc.uuid ? `https://crafatar.com/avatars/${acc.uuid}?size=32` : acc.avatar,
     accessToken: acc.accessToken || acc.access_token,
-    // Remove snake_case if present
     access_token: undefined
   }));
+  saveAccounts(accounts);
+  const result = accounts;
   // console.log('[DEBUG][get-accounts] Comptes renvoyés:', JSON.stringify(result, null, 2));
   return result;
 });
@@ -341,11 +343,11 @@ ipcMain.on('refresh-with-token', async (event, { refresh_token }) => {
     if (!tokenData.refresh_token) {
       console.warn('[WARN] Aucun refresh_token reçu pour', profile.name, profile.id);
     }
-    // Utilise uniquement mc-heads.net pour l'avatar
+    // Utilise uniquement crafatar.com pour l'avatar
     const newAcc = {
       username: profile.name,
       uuid: profile.id,
-      avatar: `https://mc-heads.net/avatar/${profile.id}/32`,
+      avatar: `https://crafatar.com/avatars/${profile.id}?size=32`,
       accessToken: mcData.access_token,
       refreshToken: tokenData.refresh_token || ''
     };
@@ -522,7 +524,7 @@ ipcMain.on('ms-login', async (event) => {
         const newAcc = {
           username: profile.name,
           uuid: profile.id,
-          avatar: `https://mc-heads.net/avatar/${profile.id}/32`,
+          avatar: `https://crafatar.com/avatars/${profile.id}?size=32`,
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token || '',
           expiresAt

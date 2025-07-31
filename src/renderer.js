@@ -1,12 +1,40 @@
-  // Ferme le panneau si on clique en dehors
-  document.addEventListener('mousedown', (e) => {
-    if (panel.classList.contains('open')) {
-      // Si le clic n'est pas dans le panel ni sur le bouton joueur
-      if (!panel.contains(e.target) && !playerBtn.contains(e.target)) {
-        closePanel();
-      }
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Fonction utilitaire pour récupérer l'UUID Mojang à partir du username
+  async function getUUID(username) {
+    try {
+      const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.id;
+    } catch (e) {
+      return null;
     }
-  });
+  }
+  // ...existing code...
+
+  // --- Gestion du panneau des comptes ---
+
+  // 1. Toggle du panneau via le bouton joueur
+  if (playerBtn) {
+    playerBtn.addEventListener('click', (e) => {
+      // On empêche la propagation pour que le clic ne soit pas capté par le handler global (fermeture)
+      e.stopPropagation();
+      if (panel.classList.contains('open')) {
+        closePanel(); // Si déjà ouvert, on ferme
+      } else {
+        openPanel(); // Sinon, on ouvre
+      }
+    });
+  }
+
+  // 2. Ferme le panneau si on clique ailleurs que sur le panel ou le bouton joueur
+
+
+// Tout le code qui utilise playerBtn et panel est maintenant dans le bloc DOMContentLoaded ci-dessous.
+
+  // ...existing code...
+});
 
 window.addEventListener('DOMContentLoaded', () => {
   const minBtn = document.querySelector('.win-min');
@@ -38,6 +66,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
   async function loadAccountsFromBackend() {
     accounts = await window.electronAPI.getAccounts();
+    // Migration automatique des comptes sans UUID ou UUID trop court
+    let migrated = false;
+    for (const acc of accounts) {
+      if (!acc.uuid || acc.uuid.length < 16) {
+        const uuid = await getUUID(acc.username);
+        if (uuid) {
+          acc.uuid = uuid;
+          acc.avatar = `https://crafatar.com/avatars/${uuid}?size=32`;
+          migrated = true;
+        }
+      }
+    }
+    if (migrated && window.electronAPI.saveAccounts) {
+      // Si une API de sauvegarde existe côté main, on l'appelle pour persister la migration
+      await window.electronAPI.saveAccounts(accounts);
+    }
     // Si un compte a été utilisé en dernier, on le sélectionne
     if (lastAccountUUID) {
       const acc = accounts.find(a => a.uuid === lastAccountUUID);
@@ -172,20 +216,26 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Gestion du panneau des comptes ---
+
+  // 1. Toggle du panneau via le bouton joueur
   if (playerBtn) {
     playerBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Empêche la propagation pour éviter la fermeture immédiate
+      // On empêche la propagation pour que le clic ne soit pas capté par le handler global (fermeture)
+      e.stopPropagation();
       if (panel.classList.contains('open')) {
-        closePanel();
+        closePanel(); // Si déjà ouvert, on ferme
       } else {
-        openPanel();
+        openPanel(); // Sinon, on ouvre
       }
     });
   }
 
-  // Ferme le panneau si on clique en dehors du panel et du bouton joueur
+  // 2. Ferme le panneau si on clique ailleurs que sur le panel ou le bouton joueur
   document.addEventListener('mousedown', (e) => {
+    // Si le panneau est ouvert
     if (panel.classList.contains('open')) {
+      // Si le clic n'est ni dans le panel, ni sur le bouton joueur
       if (!panel.contains(e.target) && !playerBtn.contains(e.target)) {
         closePanel();
       }
