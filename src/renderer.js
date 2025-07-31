@@ -1,3 +1,12 @@
+  // Ferme le panneau si on clique en dehors
+  document.addEventListener('mousedown', (e) => {
+    if (panel.classList.contains('open')) {
+      // Si le clic n'est pas dans le panel ni sur le bouton joueur
+      if (!panel.contains(e.target) && !playerBtn.contains(e.target)) {
+        closePanel();
+      }
+    }
+  });
 
 window.addEventListener('DOMContentLoaded', () => {
   const minBtn = document.querySelector('.win-min');
@@ -96,6 +105,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (accounts.length > 0 && (currentAccount || accounts[accounts.length - 1])) {
       const acc = currentAccount || accounts[accounts.length - 1];
       if (acc && acc.username && acc.avatar) {
+        console.log('[AVATAR][renderer] avatar utilisé :', acc.avatar && acc.avatar.substring(0, 40), acc.avatar && acc.avatar.startsWith('data:image/png') ? '(data URL)' : acc.avatar);
         playerBtn.innerHTML = `<img src="${acc.avatar}" alt="skin" class="user-head"><span class="user-name">${acc.username}</span>`;
         playerBtn.style.display = 'flex';
         msBtn.style.display = 'none';
@@ -163,8 +173,24 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (playerBtn) {
-    playerBtn.addEventListener('click', openPanel);
+    playerBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Empêche la propagation pour éviter la fermeture immédiate
+      if (panel.classList.contains('open')) {
+        closePanel();
+      } else {
+        openPanel();
+      }
+    });
   }
+
+  // Ferme le panneau si on clique en dehors du panel et du bouton joueur
+  document.addEventListener('mousedown', (e) => {
+    if (panel.classList.contains('open')) {
+      if (!panel.contains(e.target) && !playerBtn.contains(e.target)) {
+        closePanel();
+      }
+    }
+  });
 
   // Chargement initial depuis le backend
   loadAccountsFromBackend();

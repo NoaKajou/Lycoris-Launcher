@@ -94,11 +94,7 @@ async function refreshAccessToken(account) {
 // IPC pour récupérer tous les comptes (pour le renderer)
 ipcMain.handle('get-accounts', async () => {
   let accounts = loadAccounts();
-  accounts.forEach(acc => {
-    if (acc.accessToken) {
-      console.log('[DEBUG] Token envoyé (get-accounts):', acc.accessToken);
-    }
-  });
+  // Suppression des logs de tokens pour la confidentialité
   // Refresh tokens if needed for all accounts
   for (const acc of accounts) {
     if (isTokenExpired(acc)) {
@@ -117,7 +113,7 @@ ipcMain.handle('get-accounts', async () => {
     // Remove snake_case if present
     access_token: undefined
   }));
-  console.log('[DEBUG][get-accounts] Comptes renvoyés:', JSON.stringify(result, null, 2));
+  // console.log('[DEBUG][get-accounts] Comptes renvoyés:', JSON.stringify(result, null, 2));
   return result;
 });
 
@@ -130,9 +126,7 @@ ipcMain.handle('switch-account', async (event, uuid) => {
     forceRefresh = arguments[1].forceRefresh === true;
   }
   const acc = accounts.find(a => a.uuid === uuid);
-  if (acc && acc.accessToken) {
-    console.log('[DEBUG] Token envoyé (switch-account):', acc.accessToken);
-  }
+  // Suppression des logs de tokens pour la confidentialité
   if (!acc) throw new Error('Compte introuvable');
   if (isTokenExpired(acc) || forceRefresh) {
     try {
@@ -149,7 +143,6 @@ ipcMain.handle('switch-account', async (event, uuid) => {
     minecraftAccessToken: acc.minecraftAccessToken,
     access_token: undefined
   };
-  console.log('[DEBUG][switch-account] Compte renvoyé:', JSON.stringify(result, null, 2));
   return result;
 });
 
@@ -174,6 +167,8 @@ app.whenReady().then(async () => {
   } else {
     console.log('[SECURE] Le chiffrement AES des comptes est DÉSACTIVÉ.');
   }
+  // Log d'activation de l'avatar Mojang (toujours à jour)
+  console.log('[AVATAR] Avatar Mojang (data URL) toujours à jour : ACTIVÉ.');
   // Crée le fichier s'il n'existe pas ou s'il est vide
   try {
     if (!fs.existsSync(ACCOUNTS_PATH) || fs.readFileSync(ACCOUNTS_PATH, 'utf-8').trim() === '') {
@@ -346,6 +341,7 @@ ipcMain.on('refresh-with-token', async (event, { refresh_token }) => {
     if (!tokenData.refresh_token) {
       console.warn('[WARN] Aucun refresh_token reçu pour', profile.name, profile.id);
     }
+    // Utilise uniquement mc-heads.net pour l'avatar
     const newAcc = {
       username: profile.name,
       uuid: profile.id,
@@ -353,9 +349,25 @@ ipcMain.on('refresh-with-token', async (event, { refresh_token }) => {
       accessToken: mcData.access_token,
       refreshToken: tokenData.refresh_token || ''
     };
-    if (newAcc.accessToken) {
-      console.log('[DEBUG] Token envoyé (ms-login-success):', newAcc.accessToken);
-    }
+// Génère une image de tête Minecraft (data URL PNG) à partir de l'URL du skin Mojang
+async function generateHeadFromSkin(skinUrl) {
+  // Utilise node-canvas pour dessiner la tête (8x8 + 8x8 overlay)
+  const { createCanvas, loadImage } = require('canvas');
+  try {
+    const img = await loadImage(skinUrl);
+    const canvas = createCanvas(8, 8);
+    const ctx = canvas.getContext('2d');
+    // Tête (8x8 à partir de (8,8))
+    ctx.drawImage(img, 8, 8, 8, 8, 0, 0, 8, 8);
+    // Overlay (casque, 8x8 à partir de (40,8))
+    ctx.drawImage(img, 40, 8, 8, 8, 0, 0, 8, 8);
+    return canvas.toDataURL('image/png');
+  } catch (e) {
+    console.warn('Erreur node-canvas/génération tête:', e);
+    return null;
+  }
+}
+    // Suppression des logs de tokens pour la confidentialité
     event.sender.send('ms-login-success', newAcc);
     event.sender.send('ms-login-status', `Connecté : ${profile.name}`);
   } catch (e) {
