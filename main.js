@@ -39,6 +39,55 @@ async function refreshAccessToken(account) {
   if (idx !== -1) accounts[idx] = account;
   else accounts.push(account);
   saveAccounts(accounts);
+
+  // --- Ajout : récupération du Minecraft access token ---
+  // 1. Xbox Live auth
+  const xboxRes = await fetch('https://user.auth.xboxlive.com/user/authenticate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      Properties: {
+        AuthMethod: 'RPS',
+        SiteName: 'user.auth.xboxlive.com',
+        RpsTicket: `d=${account.accessToken}`
+      },
+      RelyingParty: 'http://auth.xboxlive.com',
+      TokenType: 'JWT'
+    })
+  });
+  const xboxData = await xboxRes.json();
+  if (!xboxData.Token) throw new Error('Xbox Live auth failed');
+  // 2. XSTS auth
+  const xstsRes = await fetch('https://xsts.auth.xboxlive.com/xsts/authorize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      Properties: {
+        SandboxId: 'RETAIL',
+        UserTokens: [xboxData.Token]
+      },
+      RelyingParty: 'rp://api.minecraftservices.com/',
+      TokenType: 'JWT'
+    })
+  });
+  const xstsData = await xstsRes.json();
+  if (!xstsData.Token) throw new Error('XSTS auth failed');
+  // 3. Minecraft access token
+  const mcRes = await fetch('https://api.minecraftservices.com/authentication/login_with_xbox', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      identityToken: `XBL3.0 x=${xstsData.DisplayClaims.xui[0].uhs};${xstsData.Token}`
+    })
+  });
+  const mcData = await mcRes.json();
+  if (!mcData.access_token) throw new Error('Minecraft access token failed');
+  account.minecraftAccessToken = mcData.access_token;
+  // Mets à jour le compte dans accounts.json (avec le token Minecraft)
+  accounts = loadAccounts();
+  if (idx !== -1) accounts[idx] = account;
+  else accounts.push(account);
+  saveAccounts(accounts);
   return account;
 }
 
@@ -62,41 +111,46 @@ ipcMain.handle('get-accounts', async () => {
   }
   saveAccounts(accounts);
   // Always return accounts with accessToken (camelCase)
-  return accounts.map(acc => ({
+  const result = accounts.map(acc => ({
     ...acc,
     accessToken: acc.accessToken || acc.access_token,
     // Remove snake_case if present
     access_token: undefined
   }));
+  console.log('[DEBUG][get-accounts] Comptes renvoyés:', JSON.stringify(result, null, 2));
+  return result;
 });
 
 // IPC pour switcher de compte (refresh auto si besoin)
 ipcMain.handle('switch-account', async (event, uuid) => {
-let accounts = loadAccounts();
-// Accepte un second argument options (ex: { forceRefresh: true })
-let forceRefresh = false;
-if (arguments.length > 1 && arguments[1] && typeof arguments[1] === 'object') {
-  forceRefresh = arguments[1].forceRefresh === true;
-}
-const acc = accounts.find(a => a.uuid === uuid);
-if (acc && acc.accessToken) {
-  console.log('[DEBUG] Token envoyé (switch-account):', acc.accessToken);
-}
-if (!acc) throw new Error('Compte introuvable');
-if (isTokenExpired(acc) || forceRefresh) {
-  try {
-    await refreshAccessToken(acc);
-    saveAccounts(accounts);
-  } catch (e) {
-    throw new Error('Refresh token échoué : ' + e.message);
+  let accounts = loadAccounts();
+  // Accepte un second argument options (ex: { forceRefresh: true })
+  let forceRefresh = false;
+  if (arguments.length > 1 && arguments[1] && typeof arguments[1] === 'object') {
+    forceRefresh = arguments[1].forceRefresh === true;
   }
-}
-// Always return account with accessToken (camelCase)
-return {
-  ...acc,
-  accessToken: acc.accessToken || acc.access_token,
-  access_token: undefined
-};
+  const acc = accounts.find(a => a.uuid === uuid);
+  if (acc && acc.accessToken) {
+    console.log('[DEBUG] Token envoyé (switch-account):', acc.accessToken);
+  }
+  if (!acc) throw new Error('Compte introuvable');
+  if (isTokenExpired(acc) || forceRefresh) {
+    try {
+      await refreshAccessToken(acc);
+      saveAccounts(accounts);
+    } catch (e) {
+      throw new Error('Refresh token échoué : ' + e.message);
+    }
+  }
+  // Always return account with accessToken (camelCase) et minecraftAccessToken
+  const result = {
+    ...acc,
+    accessToken: acc.accessToken || acc.access_token,
+    minecraftAccessToken: acc.minecraftAccessToken,
+    access_token: undefined
+  };
+  console.log('[DEBUG][switch-account] Compte renvoyé:', JSON.stringify(result, null, 2));
+  return result;
 });
 
 require('dotenv').config();

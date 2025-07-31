@@ -42,7 +42,43 @@
   document.getElementById('testTokenBtn').addEventListener('click', async () => {
     tokenTestResult.style.display = 'block';
     tokenTestResult.textContent = 'Test du token en cours...';
-    const accessToken = getAccessToken();
+    // Récupère l'UUID du compte sélectionné sur le bouton joueur, sinon fallback sur currentAccount
+    let uuid = null;
+    let accData = null;
+    const playerBtn = document.getElementById('player-btn');
+    if (playerBtn) {
+      const username = playerBtn.querySelector('.user-name')?.textContent;
+      if (window.electronAPI && window.electronAPI.getAccounts && username) {
+        const accounts = await window.electronAPI.getAccounts();
+        const acc = accounts.find(a => a.username === username);
+        if (acc) {
+          uuid = acc.uuid;
+          localStorage.setItem('lastAccountUUID', acc.uuid);
+        }
+      }
+    }
+    // Fallback : si pas de bouton joueur ou pas d'UUID, on prend le compte courant
+    if (!uuid && window.currentAccount && window.currentAccount.uuid) {
+      uuid = window.currentAccount.uuid;
+    }
+    if (!uuid) {
+      tokenTestResult.textContent = 'Aucun compte sélectionné.';
+      return;
+    }
+    // Toujours forcer le refresh du token, même si le compte courant est déjà sélectionné
+    try {
+      if (window.electronAPI && window.electronAPI.switchAccount) {
+        accData = await window.electronAPI.switchAccount(uuid, { forceRefresh: true });
+        window.currentAccount = accData;
+      } else {
+        accData = window.currentAccount;
+      }
+    } catch (e) {
+      tokenTestResult.textContent = 'Erreur lors de la sélection du compte : ' + e.message;
+      return;
+    }
+    // Utilise toujours le vrai token Minecraft si dispo
+    const accessToken = accData && (accData.minecraftAccessToken || accData.accessToken);
     console.debug('[DEBUG] currentAccount:', window.currentAccount);
     if (accessToken) {
       console.debug('[DEBUG] accessToken:', accessToken);
@@ -54,15 +90,28 @@
       return;
     }
     try {
-      const res = await fetch('https://api.minecraftservices.com/minecraft/profile', {
-        headers: { 'Authorization': 'Bearer ' + accessToken }
+      const mcProfileUrl = 'https://api.minecraftservices.com/minecraft/profile';
+      const mcProfileHeaders = { 'Authorization': 'Bearer ' + accessToken };
+      console.debug('[DEBUG][MC-API] GET', mcProfileUrl);
+      console.debug('[DEBUG][MC-API] Headers:', mcProfileHeaders);
+      const res = await fetch(mcProfileUrl, {
+        headers: mcProfileHeaders
       });
+      let apiMsg = '';
+      try {
+        const apiJson = await res.json();
+        if (apiJson && (apiJson.errorMessage || apiJson.error)) {
+          apiMsg = ' | ' + (apiJson.errorMessage || apiJson.error);
+        }
+      } catch {}
       if (res.status === 200) {
         tokenTestResult.textContent = '✅ Token valide : accès au profil Minecraft OK.';
       } else if (res.status === 401) {
-        tokenTestResult.textContent = '❌ Token invalide ou expiré (401). Relogue-toi.';
+        tokenTestResult.textContent = '❌ Token invalide ou expiré (401). Relogue-toi.' + apiMsg;
+      } else if (res.status === 404) {
+        tokenTestResult.textContent = '❌ Aucun compte Minecraft n\'est associé à ce compte Microsoft (404).' + apiMsg;
       } else {
-        tokenTestResult.textContent = 'Réponse inattendue : ' + res.status;
+        tokenTestResult.textContent = 'Réponse inattendue : ' + res.status + apiMsg;
       }
     } catch (e) {
       tokenTestResult.textContent = 'Erreur lors du test : ' + e.message;
@@ -76,6 +125,8 @@
   }
 
   function getAccessToken() {
+    // Utilise toujours le vrai token Minecraft si dispo
+    if (window.currentAccount && window.currentAccount.minecraftAccessToken) return window.currentAccount.minecraftAccessToken;
     if (window.currentAccount && window.currentAccount.accessToken) return window.currentAccount.accessToken;
     return null;
   }
@@ -226,9 +277,10 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       skinStatus.textContent = 'Erreur : le fichier skin doit être un fichier PNG natif.';
       return;
     }
-    // Récupère l'UUID du compte sélectionné sur le bouton joueur
-    const playerBtn = document.getElementById('player-btn');
+    // Récupère l'UUID du compte sélectionné sur le bouton joueur, sinon fallback sur currentAccount
     let uuid = null;
+    let accData = null;
+    const playerBtn = document.getElementById('player-btn');
     if (playerBtn) {
       const username = playerBtn.querySelector('.user-name')?.textContent;
       if (window.electronAPI && window.electronAPI.getAccounts && username) {
@@ -240,21 +292,29 @@ async function forceReloadCurrentAccountSkin(newAccount) {
         }
       }
     }
+    // Fallback : si pas de bouton joueur ou pas d'UUID, on prend le compte courant
+    if (!uuid && window.currentAccount && window.currentAccount.uuid) {
+      uuid = window.currentAccount.uuid;
+    }
     if (!uuid) {
       skinStatus.textContent = 'Aucun compte sélectionné.';
       return;
     }
     // Toujours forcer le refresh du token, même si le compte courant est déjà sélectionné
-    let accData;
     try {
-      accData = await window.electronAPI.switchAccount(uuid, { forceRefresh: true });
-      window.currentAccount = accData;
+      if (window.electronAPI && window.electronAPI.switchAccount) {
+        accData = await window.electronAPI.switchAccount(uuid, { forceRefresh: true });
+        window.currentAccount = accData;
+      } else {
+        accData = window.currentAccount;
+      }
     } catch (e) {
       skinStatus.textContent = 'Erreur lors de la sélection du compte : ' + e.message;
       return;
     }
     const variant = document.getElementById('modelSelect').value;
-    const accessToken = accData.accessToken;
+    // Utilise toujours le vrai token Minecraft si dispo
+    const accessToken = accData && (accData.minecraftAccessToken || accData.accessToken);
     if (!accessToken) {
       skinStatus.textContent = 'Aucun accessToken valide pour ce compte.';
       return;
@@ -263,8 +323,12 @@ async function forceReloadCurrentAccountSkin(newAccount) {
     // Vérifie explicitement le profil Minecraft avant d'appliquer le skin
     skinStatus.textContent = 'Vérification du compte Minecraft...';
     try {
-      const profileRes = await fetch('https://api.minecraftservices.com/minecraft/profile', {
-        headers: { 'Authorization': 'Bearer ' + accessToken }
+      const mcProfileUrl = 'https://api.minecraftservices.com/minecraft/profile';
+      const mcProfileHeaders = { 'Authorization': 'Bearer ' + accessToken };
+      console.debug('[DEBUG][MC-API] GET', mcProfileUrl);
+      console.debug('[DEBUG][MC-API] Headers:', mcProfileHeaders);
+      const profileRes = await fetch(mcProfileUrl, {
+        headers: mcProfileHeaders
       });
       if (profileRes.status === 401) {
         skinStatus.textContent = 'Token invalide ou expiré (401). Relogue-toi.';
@@ -297,11 +361,14 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       for (let pair of formData.entries()) {
         console.debug('[SKIN-UPLOAD] FormData:', pair[0], pair[1]);
       }
-      const res = await fetch('https://api.minecraftservices.com/minecraft/profile/skins', {
+      const mcSkinUrl = 'https://api.minecraftservices.com/minecraft/profile/skins';
+      const mcSkinHeaders = { 'Authorization': 'Bearer ' + accessToken };
+      console.debug('[DEBUG][MC-API] POST', mcSkinUrl);
+      console.debug('[DEBUG][MC-API] Headers:', mcSkinHeaders);
+      console.debug('[DEBUG][MC-API] Body: FormData', Array.from(formData.entries()));
+      const res = await fetch(mcSkinUrl, {
         method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + accessToken
-        },
+        headers: mcSkinHeaders,
         body: formData
       });
       if (res.status === 200) {
