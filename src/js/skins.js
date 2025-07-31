@@ -218,21 +218,85 @@ async function forceReloadCurrentAccountSkin(newAccount) {
   // --- Appliquer le skin personnalisé sur le compte Minecraft ---
   document.getElementById('applySkinBtn').addEventListener('click', async () => {
     if (!importedSkinFile) {
-      skinStatus.textContent = 'Importe d\'abord un skin .png';
+      skinStatus.textContent = "Importe d'abord un skin .png";
+      return;
+    }
+    // Vérifie que le fichier est bien un File natif (pas un dataURL ou Blob reconstruit)
+    if (!(importedSkinFile instanceof File)) {
+      skinStatus.textContent = 'Erreur : le fichier skin doit être un fichier PNG natif.';
+      return;
+    }
+    // Récupère l'UUID du compte sélectionné sur le bouton joueur
+    const playerBtn = document.getElementById('player-btn');
+    let uuid = null;
+    if (playerBtn) {
+      const username = playerBtn.querySelector('.user-name')?.textContent;
+      if (window.electronAPI && window.electronAPI.getAccounts && username) {
+        const accounts = await window.electronAPI.getAccounts();
+        const acc = accounts.find(a => a.username === username);
+        if (acc) {
+          uuid = acc.uuid;
+          localStorage.setItem('lastAccountUUID', acc.uuid);
+        }
+      }
+    }
+    if (!uuid) {
+      skinStatus.textContent = 'Aucun compte sélectionné.';
+      return;
+    }
+    // Toujours forcer le refresh du token, même si le compte courant est déjà sélectionné
+    let accData;
+    try {
+      accData = await window.electronAPI.switchAccount(uuid, { forceRefresh: true });
+      window.currentAccount = accData;
+    } catch (e) {
+      skinStatus.textContent = 'Erreur lors de la sélection du compte : ' + e.message;
       return;
     }
     const variant = document.getElementById('modelSelect').value;
-    const uuid = getUUID();
-    const accessToken = getAccessToken();
-    if (!uuid || !accessToken) {
-      skinStatus.textContent = 'Aucun compte connecté ou accessToken manquant.';
+    const accessToken = accData.accessToken;
+    if (!accessToken) {
+      skinStatus.textContent = 'Aucun accessToken valide pour ce compte.';
       return;
     }
+
+    // Vérifie explicitement le profil Minecraft avant d'appliquer le skin
+    skinStatus.textContent = 'Vérification du compte Minecraft...';
+    try {
+      const profileRes = await fetch('https://api.minecraftservices.com/minecraft/profile', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (profileRes.status === 401) {
+        skinStatus.textContent = 'Token invalide ou expiré (401). Relogue-toi.';
+        return;
+      } else if (profileRes.status === 404) {
+        skinStatus.textContent = 'Aucun compte Minecraft n\'est associé à ce compte Microsoft.';
+        return;
+      } else if (profileRes.status !== 200) {
+        skinStatus.textContent = 'Erreur lors de la vérification du profil : ' + profileRes.status;
+        return;
+      }
+    } catch (e) {
+      skinStatus.textContent = 'Erreur lors de la vérification du profil : ' + e.message;
+      return;
+    }
+
     skinStatus.textContent = 'Envoi du skin...';
+    // Log debug détaillé du token et du FormData
+    console.debug('[SKIN-UPLOAD] accessToken:', accessToken);
+    console.debug('[SKIN-UPLOAD] variant:', variant);
+    console.debug('[SKIN-UPLOAD] importedSkinFile:', importedSkinFile);
+    if (window.electronAPI && window.electronAPI.logSkinUpload) {
+      try { window.electronAPI.logSkinUpload(uuid, importedSkinFile.name); } catch (e) {}
+    }
     try {
       const formData = new FormData();
       formData.append('variant', variant);
       formData.append('file', importedSkinFile);
+      // Log le contenu du FormData (clé/valeur)
+      for (let pair of formData.entries()) {
+        console.debug('[SKIN-UPLOAD] FormData:', pair[0], pair[1]);
+      }
       const res = await fetch('https://api.minecraftservices.com/minecraft/profile/skins', {
         method: 'POST',
         headers: {
@@ -242,7 +306,7 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       });
       if (res.status === 200) {
         skinStatus.textContent = 'Skin appliqué avec succès !';
-        // ...existing code...
+        setTimeout(() => loadCurrentAccountSkin(), 1000);
       } else {
         const err = await res.json().catch(() => ({}));
         skinStatus.textContent = 'Erreur API : ' + (err.errorMessage || err.error || res.status);

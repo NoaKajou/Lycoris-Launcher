@@ -72,26 +72,31 @@ ipcMain.handle('get-accounts', async () => {
 
 // IPC pour switcher de compte (refresh auto si besoin)
 ipcMain.handle('switch-account', async (event, uuid) => {
-  let accounts = loadAccounts();
-  const acc = accounts.find(a => a.uuid === uuid);
-  if (acc && acc.accessToken) {
-    console.log('[DEBUG] Token envoyé (switch-account):', acc.accessToken);
+let accounts = loadAccounts();
+// Accepte un second argument options (ex: { forceRefresh: true })
+let forceRefresh = false;
+if (arguments.length > 1 && arguments[1] && typeof arguments[1] === 'object') {
+  forceRefresh = arguments[1].forceRefresh === true;
+}
+const acc = accounts.find(a => a.uuid === uuid);
+if (acc && acc.accessToken) {
+  console.log('[DEBUG] Token envoyé (switch-account):', acc.accessToken);
+}
+if (!acc) throw new Error('Compte introuvable');
+if (isTokenExpired(acc) || forceRefresh) {
+  try {
+    await refreshAccessToken(acc);
+    saveAccounts(accounts);
+  } catch (e) {
+    throw new Error('Refresh token échoué : ' + e.message);
   }
-  if (!acc) throw new Error('Compte introuvable');
-  if (isTokenExpired(acc)) {
-    try {
-      await refreshAccessToken(acc);
-      saveAccounts(accounts);
-    } catch (e) {
-      throw new Error('Refresh token échoué : ' + e.message);
-    }
-  }
-  // Always return account with accessToken (camelCase)
-  return {
-    ...acc,
-    accessToken: acc.accessToken || acc.access_token,
-    access_token: undefined
-  };
+}
+// Always return account with accessToken (camelCase)
+return {
+  ...acc,
+  accessToken: acc.accessToken || acc.access_token,
+  access_token: undefined
+};
 });
 
 require('dotenv').config();
