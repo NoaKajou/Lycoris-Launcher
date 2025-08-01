@@ -312,7 +312,14 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       skinStatus.textContent = 'Erreur lors de la sélection du compte : ' + e.message;
       return;
     }
-    const variant = document.getElementById('modelSelect').value;
+    let variant = document.getElementById('modelSelect').value;
+    // DEBUG: log la valeur brute
+    console.log('[DEBUG] variant:', variant);
+    // Vérification stricte du champ variant
+    if (variant !== 'classic' && variant !== 'slim') {
+      skinStatus.textContent = 'Erreur : valeur de modèle invalide (' + variant + ').';
+      return;
+    }
     // Utilise toujours le vrai token Minecraft si dispo
     const accessToken = accData && (accData.minecraftAccessToken || accData.accessToken);
     if (!accessToken) {
@@ -355,14 +362,22 @@ async function forceReloadCurrentAccountSkin(newAccount) {
     }
     try {
       const formData = new FormData();
+      // Ajoute TOUJOURS 'variant' (classic ou slim) comme l'exige la doc Mojang
       formData.append('variant', variant);
-      formData.append('file', importedSkinFile);
-      // Log le contenu du FormData (clé/valeur)
+      formData.append('file', importedSkinFile, 'skin.png');
+      // Log et affiche le contenu du FormData (clé/valeur) pour debug
+      let fdDebug = [];
       for (let pair of formData.entries()) {
-        console.debug('[SKIN-UPLOAD] FormData:', pair[0], pair[1]);
+        fdDebug.push([pair[0], pair[1]]);
       }
+      console.debug('[SKIN-UPLOAD] FormData DEBUG:', fdDebug);
+      skinStatus.textContent = 'DEBUG FormData: ' + JSON.stringify(fdDebug);
       const mcSkinUrl = 'https://api.minecraftservices.com/minecraft/profile/skins';
-      const mcSkinHeaders = { 'Authorization': 'Bearer ' + accessToken };
+      // Ne surtout pas inclure Content-Type ici, laisser le navigateur gérer le boundary du FormData
+      const mcSkinHeaders = {
+        'Authorization': 'Bearer ' + accessToken
+        // ne pas inclure Content-Type ici
+      };
       console.debug('[DEBUG][MC-API] POST', mcSkinUrl);
       console.debug('[DEBUG][MC-API] Headers:', mcSkinHeaders);
       console.debug('[DEBUG][MC-API] Body: FormData', Array.from(formData.entries()));
@@ -371,12 +386,14 @@ async function forceReloadCurrentAccountSkin(newAccount) {
         headers: mcSkinHeaders,
         body: formData
       });
+      const result = await res.text();
+      console.log('[DEBUG] status:', res.status);
+      console.log('[DEBUG] body:', result);
       if (res.status === 200) {
         skinStatus.textContent = 'Skin appliqué avec succès !';
         setTimeout(() => loadCurrentAccountSkin(), 1000);
       } else {
-        const err = await res.json().catch(() => ({}));
-        skinStatus.textContent = 'Erreur API : ' + (err.errorMessage || err.error || res.status);
+        skinStatus.textContent = 'Erreur API : ' + result;
       }
     } catch (e) {
       skinStatus.textContent = 'Erreur : ' + e.message;
