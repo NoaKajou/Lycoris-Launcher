@@ -168,11 +168,18 @@ async function loadSkin(uuid, model = "default", capeUrl = null) {
     const base64 = data.properties[0].value;
     const decoded = JSON.parse(atob(base64));
     let skinUrl = decoded.textures.SKIN?.url;
+    let variant = decoded.textures.SKIN?.metadata?.model || 'classic';
+    // Mojang renvoie 'slim' pour Alex, sinon rien (donc classic)
     if (skinUrl && skinUrl.startsWith('http://')) skinUrl = skinUrl.replace('http://', 'https://');
     if (skinUrl) {
       skinUrl += `?t=${Date.now()}`;
     }
-    resetViewer(skinUrl, model);
+    // Met à jour le select si présent
+    const select = document.getElementById('modelSelect');
+    if (select) {
+      select.value = (variant === 'slim') ? 'slim' : 'classic';
+    }
+    resetViewer(skinUrl, (variant === 'slim') ? 'slim' : 'default');
   } catch (e) {
     console.error('Erreur chargement skin:', e);
   }
@@ -221,6 +228,7 @@ async function forceReloadCurrentAccountSkin(newAccount) {
     viewer = null;
   }
   await loadCurrentAccountSkin();
+  renderSkinGallery(); // Rafraîchit la galerie à chaque changement de compte
 }
 
   // Expose la fonction pour le main process ou preload
@@ -243,13 +251,18 @@ async function forceReloadCurrentAccountSkin(newAccount) {
   // Preview dynamique uniquement lors d'un changement de modèle
   document.getElementById("modelSelect").addEventListener("change", (e) => {
     if (importedSkinFile) {
-      loadSkinFromFile(importedSkinFile, e.target.value);
+      // Recharge l'aperçu avec le nouveau modèle, mais NE PAS réinitialiser importedSkinFile
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        loadSkinFromFile(evt.target.result, e.target.value);
+      };
+      reader.readAsDataURL(importedSkinFile);
     } else if (window.currentAccount && window.currentAccount.uuid) {
       loadCurrentAccountSkin();
     }
   });
 
-  // --- Import d'un skin personnalisé ---
+  // --- Import d'un skin personnalisé + stockage local ---
   document.getElementById('skinFileInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -258,13 +271,185 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       return;
     }
     importedSkinFile = file;
+    // Associe le skin à l'UUID du compte courant (ou 'default' si aucun)
+    let uuid = (window.currentAccount && window.currentAccount.uuid) ? window.currentAccount.uuid : 'default';
     const reader = new FileReader();
     reader.onload = function(evt) {
-      loadSkinFromFile(evt.target.result, document.getElementById('modelSelect').value);
-      skinStatus.textContent = '';
+      // Détection automatique du modèle (slim/classic) à partir du PNG
+      const img = new window.Image();
+      img.onload = function() {
+        let detected = 'classic';
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          let isSlim = true;
+          for (let y = 52; y <= 63; y++) {
+            for (let x = 46; x <= 47; x++) {
+              const alpha = ctx.getImageData(x, y, 1, 1).data[3];
+              if (alpha !== 0) {
+                isSlim = false;
+                break;
+              }
+            }
+            if (!isSlim) break;
+          }
+          if (isSlim) detected = 'slim';
+        } catch (err) {}
+        document.getElementById('modelSelect').value = detected;
+        loadSkinFromFile(evt.target.result, detected);
+        skinStatus.textContent = 'Modèle détecté : ' + detected;
+        // --- Stockage local du skin dans la galerie ---
+        // Galerie par compte
+        let allGalleries = {};
+        try {
+          allGalleries = JSON.parse(localStorage.getItem('skinGalleryByAccount') || '{}');
+        } catch {}
+        let gallery = allGalleries[uuid] || [];
+        // Empêche les doublons (même nom + même data)
+        if (!gallery.some(s => s.name === file.name && s.data === evt.target.result)) {
+          gallery.push({
+            name: file.name,
+            data: evt.target.result,
+            model: detected,
+            date: Date.now()
+          });
+          allGalleries[uuid] = gallery;
+          localStorage.setItem('skinGalleryByAccount', JSON.stringify(allGalleries));
+        }
+        renderSkinGallery();
+      };
+      img.onerror = function() {
+        loadSkinFromFile(evt.target.result, document.getElementById('modelSelect').value);
+        skinStatus.textContent = '';
+      };
+      img.src = evt.target.result;
     };
     reader.readAsDataURL(file);
   });
+
+  // --- Affichage et gestion de la galerie de skins ---
+  function renderSkinGallery() {
+    const galleryDiv = document.getElementById('skinGallery');
+    // Galerie par compte
+    let allGalleries = {};
+    let uuid = (window.currentAccount && window.currentAccount.uuid) ? window.currentAccount.uuid : 'default';
+    try {
+      allGalleries = JSON.parse(localStorage.getItem('skinGalleryByAccount') || '{}');
+    } catch {}
+    let gallery = allGalleries[uuid] || [];
+    galleryDiv.innerHTML = '';
+    if (!gallery.length) {
+      galleryDiv.textContent = 'Aucun skin enregistré.';
+      return;
+    }
+    gallery.slice().reverse().forEach((skin, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+      wrapper.style.alignItems = 'center';
+      wrapper.style.gap = '0.2em';
+      wrapper.style.background = '#222';
+      wrapper.style.borderRadius = '8px';
+      wrapper.style.padding = '0.5em';
+      wrapper.style.boxShadow = '0 1px 4px #0008';
+      wrapper.style.width = '64px';
+      wrapper.style.position = 'relative';
+      // Bouton croix (supprimer)
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '✕';
+      closeBtn.title = 'Supprimer ce skin';
+      closeBtn.style.position = 'absolute';
+      closeBtn.style.top = '2px';
+      closeBtn.style.right = '2px';
+      closeBtn.style.background = 'rgba(40,40,40,0.8)';
+      closeBtn.style.color = '#e74c3c';
+      closeBtn.style.border = 'none';
+      closeBtn.style.borderRadius = '50%';
+      closeBtn.style.width = '18px';
+      closeBtn.style.height = '18px';
+      closeBtn.style.fontSize = '1em';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.zIndex = '2';
+      closeBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        // Supprime le skin de la galerie du compte
+        let allGalleries = {};
+        let uuid = (window.currentAccount && window.currentAccount.uuid) ? window.currentAccount.uuid : 'default';
+        try {
+          allGalleries = JSON.parse(localStorage.getItem('skinGalleryByAccount') || '{}');
+        } catch {}
+        let gallery = allGalleries[uuid] || [];
+        // On identifie le skin par son nom et data
+        gallery = gallery.filter(s => !(s.name === skin.name && s.data === skin.data));
+        allGalleries[uuid] = gallery;
+        localStorage.setItem('skinGalleryByAccount', JSON.stringify(allGalleries));
+        renderSkinGallery();
+      };
+      // Miniature 2D (face avant)
+      const canvas = document.createElement('canvas');
+      canvas.width = 48;
+      canvas.height = 64;
+      canvas.style.background = '#181b20';
+      canvas.style.borderRadius = '4px';
+      canvas.title = skin.name + ' (' + skin.model + ')';
+      canvas.style.cursor = 'pointer';
+      // Rendu 2D face avant
+      const img = new window.Image();
+      img.onload = function() {
+        const ctx = canvas.getContext('2d');
+        // Tête (8x8)
+        ctx.drawImage(img, 8, 8, 8, 8, 16, 0, 16, 16);
+        // Corps (8x12)
+        ctx.drawImage(img, 20, 20, 8, 12, 16, 16, 16, 24);
+        // Jambe gauche (4x12)
+        ctx.drawImage(img, 4, 20, 4, 12, 16, 40, 8, 24);
+        // Jambe droite (4x12)
+        ctx.drawImage(img, 20, 52, 4, 12, 24, 40, 8, 24);
+        // Bras gauche (4x12)
+        ctx.drawImage(img, 36, 52, 4, 12, 8, 16, 8, 24);
+        // Bras droit (4x12)
+        ctx.drawImage(img, 44, 20, 4, 12, 32, 16, 8, 24);
+        // Overlay tête (casque)
+        ctx.drawImage(img, 40, 8, 8, 8, 16, 0, 16, 16);
+      };
+      img.src = skin.data;
+      // Appliquer le skin au clic sur la miniature
+      canvas.onclick = () => {
+        importedSkinFile = dataURLtoFile(skin.data, skin.name);
+        document.getElementById('modelSelect').value = skin.model;
+        loadSkinFromFile(skin.data, skin.model);
+        skinStatus.textContent = 'Skin sélectionné : ' + skin.name;
+      };
+      // Nom
+      const name = document.createElement('div');
+      name.textContent = skin.name;
+      name.style.fontSize = '0.7em';
+      name.style.color = '#ccc';
+      name.style.textAlign = 'center';
+      name.style.wordBreak = 'break-all';
+      // Ajout
+      wrapper.appendChild(closeBtn);
+      wrapper.appendChild(canvas);
+      wrapper.appendChild(name);
+      galleryDiv.appendChild(wrapper);
+    });
+  }
+
+  // Utilitaire : convertir un dataURL en File
+  function dataURLtoFile(dataurl, filename) {
+    const arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]);
+    let n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, {type:mime});
+  }
+
+  // Affiche la galerie au chargement
+  renderSkinGallery();
 
   // --- Appliquer le skin personnalisé sur le compte Minecraft ---
   document.getElementById('applySkinBtn').addEventListener('click', async () => {

@@ -1,21 +1,30 @@
 
 <h2>Mon Skin Minecraft</h2>
-<div style="display:flex;flex-direction:column;align-items:center;gap:1em;">
-  <canvas id="skinCanvas" width="300" height="400" style="background:#181b20;border-radius:12px;"></canvas>
-  <div style="display:flex;gap:1em;align-items:center;">
-    <label>Modèle :
-      <select id="modelSelect">
-        <option value="classic">Classic</option>
-        <option value="slim">Slim</option>
-      </select>
-    </label>
-    <input type="file" id="skinFileInput" accept=".png" style="margin-left:1em;">
-    <button id="applySkinBtn" style="margin-left:1em;">Appliquer</button>
-    <button id="testTokenBtn" style="margin-left:1em;">Tester le token</button>
+<div style="display:flex;flex-direction:row;align-items:flex-start;gap:2em;justify-content:center;">
+  <!-- Galerie scrollable -->
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="font-size:1em;color:#aaa;margin-bottom:0.5em;">Galerie</div>
+    <div id="skinGallery" style="margin:0;max-width:350px;width:350px;min-height:120px;max-height:140px;overflow-x:auto;overflow-y:hidden;display:flex;flex-direction:row;align-items:flex-end;gap:0.5em;background:#181b20;border-radius:10px;padding:0.5em 0.5em 0.2em 0.5em;box-shadow:0 1px 8px #0006;"></div>
   </div>
-  <div id="tokenTestResult" style="margin-top:0.5em;color:#ffb;display:none;"></div>
-  <div id="skinGallery" style="margin-top:1em;max-width:350px;width:100%;display:flex;flex-wrap:wrap;gap:0.5em;"></div>
+  <!-- Skin actuel -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1em;min-width:320px;">
+    <canvas id="skinCanvas" width="300" height="400" style="background:#181b20;border-radius:12px;"></canvas>
+    <div style="display:flex;gap:1em;align-items:center;">
+      <label>Modèle :
+        <select id="modelSelect">
+          <option value="classic">Classic</option>
+          <option value="slim">Slim</option>
+        </select>
+      </label>
+      <input type="file" id="skinFileInput" accept=".png" style="margin-left:1em;">
+      <button id="testTokenBtn" style="margin-left:1em;">Tester le token</button>
+    </div>
+    <div id="tokenTestResult" style="margin-top:0.5em;color:#ffb;display:none;"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+      <div id="currentSkinInfo" style="font-size:0.95em;color:#bbb;"></div>
+      <button id="applySkinBtn" style="margin-top:0.2em;">Appliquer ce skin</button>
+    </div>
+    <div id="skinStatus" style="margin-top:1em;color:#e74c3c;"></div>
+  </div>
 </div>
-<div id="skinStatus" style="margin-top:1em;color:#e74c3c;"></div>
 <!-- La logique skinview3d et skin upload est dans js/skins.js -->
- 
