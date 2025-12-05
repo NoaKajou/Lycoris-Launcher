@@ -4,12 +4,12 @@
     {
       "path": "main.js",
       "url": "https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/main.js",
-      "sha256": "76e2a7a4f31cf6225666474d1be19b12bc11c052828e0ead2147c0a94cd561d3"
+      "sha256": "06809a73a6f817a889e53aeec2a5ea44ddcc1e093186dd6e5d0fb64b26d90cb3"
     },
     {
       "path": "src/renderer.js",
       "url": "https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/src/renderer.js",
-      "sha256": "da52a86406dd2133037a0d19ffde5765e8156366206744500fa679ce0d0f69c9"
+      "sha256": "946d524b0ad50b28e4ee8f7a3d9dba5ccbe2e690fb0437d039034f450d010202"
     },
     {
       "path": "src/preload.js",

@@ -55,20 +55,29 @@ async function downloadFile(url, dest) {
   await streamPipeline(res.body, fs.createWriteStream(dest));
 }
 
-async function verifyAndRepairFiles(manifest, baseDir, logger) {
+async function verifyAndRepairFiles(manifest, baseDir, logger, progressCallback) {
   if (!manifest.files || !Array.isArray(manifest.files)) return [];
   const results = [];
-  for (const file of manifest.files) {
+  const total = manifest.files.length;
+  for (let i = 0; i < manifest.files.length; i++) {
+    const file = manifest.files[i];
     const target = path.join(baseDir, file.path);
     const expectedHash = (file.sha256 || '').toLowerCase();
     const currentHash = (await sha256File(target)) || null;
     const ok = currentHash && expectedHash && currentHash === expectedHash;
+    
+    if (progressCallback) {
+      progressCallback({ type: 'progress', current: i + 1, total, percent: Math.round(((i + 1) / total) * 100) });
+    }
+    
     if (ok) {
       results.push({ path: file.path, status: 'ok' });
+      if (progressCallback) progressCallback({ type: 'file', path: file.path, status: 'ok' });
       continue;
     }
     if (!file.url) {
       results.push({ path: file.path, status: 'missing-url' });
+      if (progressCallback) progressCallback({ type: 'file', path: file.path, status: 'error' });
       continue;
     }
     try {
@@ -76,24 +85,38 @@ async function verifyAndRepairFiles(manifest, baseDir, logger) {
       const newHash = (await sha256File(target)) || '';
       const fixed = expectedHash && newHash.toLowerCase() === expectedHash;
       results.push({ path: file.path, status: fixed ? 'repaired' : 'mismatch-after-download' });
+      if (progressCallback) progressCallback({ type: 'file', path: file.path, status: fixed ? 'repair' : 'error' });
     } catch (err) {
       results.push({ path: file.path, status: 'download-error', error: err.message });
+      if (progressCallback) progressCallback({ type: 'file', path: file.path, status: 'error' });
     }
   }
   log(logger, `[UPDATE] Vérification terminée (${results.length} fichiers).`);
   return results;
 }
 
-async function checkUpdatesAndRepair({ manifestUrl, baseDir, currentVersion, logger }) {
+async function checkUpdatesAndRepair({ manifestUrl, baseDir, currentVersion, logger, progressCallback }) {
   if (!manifestUrl) throw new Error('Aucune URL de manifeste de mise à jour fournie');
+  
+  if (progressCallback) progressCallback({ type: 'checking', message: 'Vérification des mises à jour...' });
+  
   const manifest = await fetchManifest(manifestUrl);
   const hasUpdate = isNewerVersion(manifest.version, currentVersion);
+  
+  if (progressCallback) {
+    progressCallback({ type: 'version', hasUpdate, version: manifest.version, message: hasUpdate ? `Nouvelle version ${manifest.version} disponible` : 'Version à jour' });
+  }
+  
   if (hasUpdate) {
     log(logger, `[UPDATE] Nouvelle version disponible: ${manifest.version} (local ${currentVersion}).`);
   } else {
     log(logger, `[UPDATE] Version à jour (local ${currentVersion}, manifest ${manifest.version || 'inconnu'}).`);
   }
-  const filesResult = await verifyAndRepairFiles(manifest, baseDir, logger);
+  
+  const filesResult = await verifyAndRepairFiles(manifest, baseDir, logger, progressCallback);
+  
+  if (progressCallback) progressCallback({ type: 'complete', message: 'Mise à jour terminée !' });
+  
   return {
     hasUpdate,
     manifestVersion: manifest.version,
