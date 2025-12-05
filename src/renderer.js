@@ -1,4 +1,3 @@
-
 window.addEventListener('DOMContentLoaded', () => {
   // Fonction utilitaire pour récupérer l'UUID Mojang à partir du username
   async function getUUID(username) {
@@ -11,32 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return null;
     }
   }
-  // ...existing code...
 
-  // --- Gestion du panneau des comptes ---
-
-  // 1. Toggle du panneau via le bouton joueur
-  if (playerBtn) {
-    playerBtn.addEventListener('click', (e) => {
-      // On empêche la propagation pour que le clic ne soit pas capté par le handler global (fermeture)
-      e.stopPropagation();
-      if (panel.classList.contains('open')) {
-        closePanel(); // Si déjà ouvert, on ferme
-      } else {
-        openPanel(); // Sinon, on ouvre
-      }
-    });
-  }
-
-  // 2. Ferme le panneau si on clique ailleurs que sur le panel ou le bouton joueur
-
-
-// Tout le code qui utilise playerBtn et panel est maintenant dans le bloc DOMContentLoaded ci-dessous.
-
-  // ...existing code...
-});
-
-window.addEventListener('DOMContentLoaded', () => {
   const minBtn = document.querySelector('.win-min');
   const maxBtn = document.querySelector('.win-max');
   const closeBtn = document.querySelector('.win-close');

@@ -1,5 +1,12 @@
 /* Style principal pour la page skins.html */
 
+h2 {
+  text-align: center;
+  margin: 12px 0 8px;
+  color: #fff;
+  text-shadow: 0 2px 12px #000a;
+}
+
 
 .skins-container {
   display: flex;
@@ -7,27 +14,46 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 2em;
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
+  width: min(1200px, 100% - 48px);
+  padding: 20px 24px;
+  margin: 12px auto 32px;
+  background: rgba(12, 14, 18, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px #0007;
 }
 
 
 .skin-gallery-section {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  min-width: 370px;
+  align-items: stretch;
+  min-width: 240px;
+  max-width: 260px;
+  padding: 14px;
+  gap: 0.75em;
   order: 1;
+  background: rgba(12, 14, 18, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 8px 18px #0006;
+  backdrop-filter: blur(8px);
 }
 
 .skin-current-section {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 1em;
-  min-width: 320px;
+  min-width: 360px;
+  padding: 18px 20px;
   order: 2;
+  background: rgba(12, 14, 18, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 26px #0007;
 }
 
 .skin-gallery-title {
@@ -38,41 +64,41 @@
 
 #skinGallery {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: minmax(120px, auto);
-  gap: 0.5em;
-  background: rgba(24, 27, 32, 0.8);
+  grid-template-columns: 1fr;
+  grid-auto-rows: minmax(76px, auto);
+  gap: 0.6em;
+  background: rgba(12, 14, 18, 0.45);
   backdrop-filter: blur(10px);
-  border-radius: 10px;
-  padding: 0.5em 0.5em 0.2em 0.5em;
-  box-shadow: 0 1px 8px #0006;
-  max-width: 350px;
-  min-width: 350px;
-  min-height: 120px;
-  max-height: 320px;
+  border-radius: 12px;
+  padding: 0.6em;
+  box-shadow: inset 0 1px 0 #ffffff0f, 0 6px 14px #0005;
+  max-width: 260px;
+  min-width: 220px;
+  min-height: 160px;
+  max-height: 420px;
   overflow-x: hidden;
   overflow-y: auto;
 }
 
 .skin-gallery-skin {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.2em;
-  background: rgba(34, 34, 34, 0.9);
+  gap: 0.6em;
+  background: rgba(34, 34, 34, 0.85);
   backdrop-filter: blur(5px);
-  border-radius: 8px;
-  padding: 0.5em;
-  box-shadow: 0 1px 4px #0008;
-  width: 64px;
+  border-radius: 10px;
+  padding: 0.5em 0.65em;
+  box-shadow: 0 1px 6px #0008;
+  width: 100%;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .skin-gallery-skin button {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 6px;
+  right: 6px;
   background: rgba(40,40,40,0.8);
   color: #e74c3c;
   border: none;
@@ -87,28 +113,41 @@
 .skin-gallery-skin canvas {
   background: rgba(24, 27, 32, 0.8);
   backdrop-filter: blur(5px);
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  width: 52px;
+  height: 72px;
+  object-fit: contain;
 }
 
 .skin-gallery-skin .skin-name {
-  font-size: 0.7em;
-  color: #ccc;
-  text-align: center;
+  font-size: 0.75em;
+  color: #e6e6e6;
+  text-align: left;
   word-break: break-all;
+  line-height: 1.3;
 }
 
 #skinCanvas {
-  background: rgba(24, 27, 32, 0.8);
+  background: rgba(24, 27, 32, 0.72);
   backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  width: min(320px, 70vw);
+  aspect-ratio: 3 / 4;
 }
 
 .skin-controls {
   display: flex;
-  gap: 1em;
+  gap: 0.8em;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: rgba(12, 14, 18, 0.45);
+  border-radius: 12px;
+  padding: 0.6em 0.8em;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 #ffffff10;
 }
 
 #tokenTestResult {
@@ -136,15 +175,18 @@
     flex-direction: column;
     align-items: center;
     gap: 1.5em;
+    padding: 16px;
   }
   .skin-current-section {
     align-items: center;
     margin-left: 0;
     order: 1;
+    width: 100%;
   }
   .skin-gallery-section {
     align-items: center;
     min-width: unset;
     order: 2;
+    width: 100%;
   }
 }
