@@ -8,11 +8,27 @@ const fs = require('fs');
 require('dotenv').config();
 const { loadKey } = require('./keyManager');
 const { encryptJSON, decryptJSON } = require('./cryptoUtils');
+const { checkUpdatesAndRepair } = require('./updateManager');
+const APP_VERSION = require('./package.json').version;
+const UPDATE_MANIFEST_URL = process.env.UPDATE_MANIFEST_URL || 'https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/update-manifest.json';
 
 // Vérifie si le accessToken est expiré
 function isTokenExpired(account) {
   if (!account.expiresAt) return true;
   return new Date(account.expiresAt) < new Date();
+}
+
+async function runUpdateAndRepair() {
+  try {
+    await checkUpdatesAndRepair({
+      manifestUrl: UPDATE_MANIFEST_URL,
+      baseDir: __dirname,
+      currentVersion: APP_VERSION,
+      logger: (msg) => console.log(msg)
+    });
+  } catch (err) {
+    console.warn('[UPDATE] Vérification/maj ignorée :', err.message);
+  }
 }
 
 // Rafraîchit le accessToken avec le refreshToken
@@ -161,6 +177,7 @@ let key;
 
 // Initialisation unique de la fenêtre principale et de l'auto-login
 app.whenReady().then(async () => {
+  await runUpdateAndRepair();
   ACCOUNTS_PATH = path.join(app.getPath('userData'), 'accounts.json');
   LAST_ACCOUNT_PATH = path.join(app.getPath('userData'), 'lastAccount.json');
   key = loadKey();

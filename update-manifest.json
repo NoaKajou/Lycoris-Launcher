@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "files": [
+    {
+      "path": "main.js",
+      "url": "https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/main.js",
+      "sha256": "76e2a7a4f31cf6225666474d1be19b12bc11c052828e0ead2147c0a94cd561d3"
+    },
+    {
+      "path": "src/renderer.js",
+      "url": "https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/src/renderer.js",
+      "sha256": "da52a86406dd2133037a0d19ffde5765e8156366206744500fa679ce0d0f69c9"
+    },
+    {
+      "path": "src/preload.js",
+      "url": "https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/src/preload.js",
+      "sha256": "2fb267ffa15c4610a3f0b0f4a6fb2b5d6f80f145d7c3f8b8a16ec190356d691b"
+    },
+    {
+      "path": "package.json",
+      "url": "https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/package.json",
+      "sha256": "7e2ad99d97dd6c7cfacfafaa11f95ed53732851a429b649e641751043e4d4ac7"
+    },
+    {
+      "path": "src/style/skins.css",
+      "url": "https://raw.githubusercontent.com/NoaKajou/Lycoris-Launcher/main/src/style/skins.css",
+      "sha256": "f041653548e5dcf4c47dfba2b7941e4aa57a5f1296feb32207f5645413beb588"
+    }
+  ]
+}
