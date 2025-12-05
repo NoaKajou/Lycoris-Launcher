@@ -18,16 +18,81 @@ function isTokenExpired(account) {
   return new Date(account.expiresAt) < new Date();
 }
 
+let updateWin;
+
+function createUpdateWindow() {
+  updateWin = new BrowserWindow({
+    width: 600,
+    height: 500,
+    frame: false,
+    autoHideMenuBar: true,
+    resizable: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'src/preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+  updateWin.setMenuBarVisibility(false);
+  updateWin.loadFile('src/update.html');
+  return updateWin;
+}
+
 async function runUpdateAndRepair() {
-  try {
-    await checkUpdatesAndRepair({
-      manifestUrl: UPDATE_MANIFEST_URL,
-      baseDir: __dirname,
-      currentVersion: APP_VERSION,
-      logger: (msg) => console.log(msg)
+  const needsUpdate = await (async () => {
+    try {
+      const manifest = await (await import('node-fetch')).default(UPDATE_MANIFEST_URL).then(r => r.json());
+      const remoteVersion = manifest.version;
+      const localVersion = APP_VERSION;
+      return remoteVersion !== localVersion;
+    } catch {
+      return false;
+    }
+  })();
+
+  if (!needsUpdate) {
+    try {
+      await checkUpdatesAndRepair({
+        manifestUrl: UPDATE_MANIFEST_URL,
+        baseDir: __dirname,
+        currentVersion: APP_VERSION,
+        logger: (msg) => console.log(msg)
+      });
+    } catch (err) {
+      console.warn('[UPDATE] Vérification/maj ignorée :', err.message);
+    }
+    return;
+  }
+
+  const updateWindow = createUpdateWindow();
+  
+  await new Promise((resolve) => {
+    updateWindow.webContents.once('did-finish-load', async () => {
+      try {
+        await checkUpdatesAndRepair({
+          manifestUrl: UPDATE_MANIFEST_URL,
+          baseDir: __dirname,
+          currentVersion: APP_VERSION,
+          logger: (msg) => console.log(msg),
+          progressCallback: (data) => {
+            if (updateWindow && !updateWindow.isDestroyed()) {
+              updateWindow.webContents.send('update-status', data);
+            }
+          }
+        });
+        resolve();
+      } catch (err) {
+        console.warn('[UPDATE] Vérification/maj ignorée :', err.message);
+        if (updateWindow && !updateWindow.isDestroyed()) {
+          updateWindow.webContents.send('update-status', { type: 'error', message: err.message });
+        }
+        setTimeout(resolve, 2000);
+      }
     });
-  } catch (err) {
-    console.warn('[UPDATE] Vérification/maj ignorée :', err.message);
+  });
+  
+  if (updateWindow && !updateWindow.isDestroyed()) {
+    updateWindow.close();
   }
 }
 
@@ -125,7 +190,7 @@ ipcMain.handle('get-accounts', async () => {
   // Met à jour l'avatar de tous les comptes existants pour garantir l'usage de l'UUID Minecraft
   accounts = accounts.map(acc => ({
     ...acc,
-    avatar: acc.uuid ? `https://crafatar.com/avatars/${acc.uuid}?size=32` : acc.avatar,
+    avatar: acc.uuid ? `https://crafatar.com/renders/head/${acc.uuid}` : acc.avatar,
     accessToken: acc.accessToken || acc.access_token,
     access_token: undefined
   }));
@@ -248,6 +313,14 @@ ipcMain.on('set-last-account', (event, uuid) => {
   }
 });
 
+// IPC pour signaler la fin de la mise à jour
+ipcMain.on('update-complete', () => {
+  if (updateWin && !updateWin.isDestroyed()) {
+    updateWin.close();
+    updateWin = null;
+  }
+});
+
 app.on('activate', function () {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
@@ -364,7 +437,7 @@ ipcMain.on('refresh-with-token', async (event, { refresh_token }) => {
     const newAcc = {
       username: profile.name,
       uuid: profile.id,
-      avatar: `https://crafatar.com/avatars/${profile.id}?size=32`,
+      avatar: `https://crafatar.com/renders/head/${profile.id}`,
       accessToken: mcData.access_token,
       refreshToken: tokenData.refresh_token || ''
     };
@@ -541,7 +614,7 @@ ipcMain.on('ms-login', async (event) => {
         const newAcc = {
           username: profile.name,
           uuid: profile.id,
-          avatar: `https://crafatar.com/avatars/${profile.id}?size=32`,
+          avatar: `https://crafatar.com/renders/head/${profile.id}`,
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token || '',
           expiresAt

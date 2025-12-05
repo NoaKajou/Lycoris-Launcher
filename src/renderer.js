@@ -18,6 +18,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (maxBtn) maxBtn.addEventListener('click', () => window.electronAPI.maximize());
   if (closeBtn) closeBtn.addEventListener('click', () => window.electronAPI.close());
 
+  const headUrl = (uuid) => `https://crafatar.com/renders/head/${uuid}`;
+  const headFallbackUrl = (uuid) => `https://mc-heads.net/avatar/${uuid}/64`;
+
   // Multi-comptes avec panneau latéral
   const msBtn = document.getElementById('ms-login-btn');
   const msStatus = document.getElementById('ms-login-status');
@@ -47,9 +50,13 @@ window.addEventListener('DOMContentLoaded', () => {
         const uuid = await getUUID(acc.username);
         if (uuid) {
           acc.uuid = uuid;
-          acc.avatar = `https://crafatar.com/avatars/${uuid}?size=32`;
+          acc.avatar = headUrl(uuid);
           migrated = true;
         }
+      }
+      // Normalise l'URL d'avatar vers le head render même si déjà présent
+      if (acc.uuid) {
+        acc.avatar = headUrl(acc.uuid);
       }
     }
     if (migrated && window.electronAPI.saveAccounts) {
@@ -76,10 +83,12 @@ window.addEventListener('DOMContentLoaded', () => {
       const item = document.createElement('div');
       item.className = 'account-item';
       item.innerHTML = `
-        <img src="${acc.avatar}" alt="skin" class="user-head">
+        <img src="${headUrl(acc.uuid)}" alt="skin" class="user-head">
         <span class="user-name">${acc.username}</span>
         <button class="delete-account-btn" title="Supprimer ce compte">✕</button>
       `;
+      const imgEl = item.querySelector('img');
+      imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = headFallbackUrl(acc.uuid); };
       // Connexion rapide sur clic sur l'item (hors bouton delete)
       item.addEventListener('click', async (e) => {
         if (e.target.classList.contains('delete-account-btn')) return;
@@ -123,8 +132,26 @@ window.addEventListener('DOMContentLoaded', () => {
     if (accounts.length > 0 && (currentAccount || accounts[accounts.length - 1])) {
       const acc = currentAccount || accounts[accounts.length - 1];
       if (acc && acc.username && acc.avatar) {
-        console.log('[AVATAR][renderer] avatar utilisé :', acc.avatar && acc.avatar.substring(0, 40), acc.avatar && acc.avatar.startsWith('data:image/png') ? '(data URL)' : acc.avatar);
-        playerBtn.innerHTML = `<img src="${acc.avatar}" alt="skin" class="user-head"><span class="user-name">${acc.username}</span>`;
+        const avatarSrc = headUrl(acc.uuid || '') || acc.avatar;
+        console.log('[AVATAR][renderer] avatar utilisé :', avatarSrc && avatarSrc.substring(0, 80), avatarSrc && avatarSrc.startsWith('data:image/png') ? '(data URL)' : avatarSrc);
+
+        // Reconstruit le contenu sans handlers inline (CSP compliant)
+        playerBtn.textContent = '';
+        const imgEl = document.createElement('img');
+        imgEl.className = 'user-head';
+        imgEl.alt = 'skin';
+        imgEl.onerror = () => {
+          imgEl.onerror = null;
+          if (acc.uuid) imgEl.src = headFallbackUrl(acc.uuid);
+        };
+        imgEl.src = avatarSrc;
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'user-name';
+        nameEl.textContent = acc.username;
+
+        playerBtn.appendChild(imgEl);
+        playerBtn.appendChild(nameEl);
         playerBtn.style.display = 'flex';
         msBtn.style.display = 'none';
         if (!playerBtn.parentNode) {

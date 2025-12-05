@@ -13,5 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMsLoginSuccess: (callback) => ipcRenderer.on('ms-login-success', (event, data) => callback(data)),
   onMsLoginRefreshToken: (callback) => ipcRenderer.on('ms-login-refresh-token', (event, data) => callback(data)),
   deleteAccount: (uuid) => ipcRenderer.invoke('delete-account', uuid),
-  setLastAccount: (uuid) => ipcRenderer.send('set-last-account', uuid)
+  setLastAccount: (uuid) => ipcRenderer.send('set-last-account', uuid),
+  onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, data) => callback(data)),
+  updateComplete: () => ipcRenderer.send('update-complete')
 });
