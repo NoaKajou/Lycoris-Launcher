@@ -1,31 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style/skins.css">
+</head>
+<body>
 
-<link rel="stylesheet" href="../style/skins.css">
-<h2>Mon Skin Minecraft</h2>
-<div class="skins-container">
-  <!-- Skin du joueur actuel (à droite) -->
-  <div class="skin-current-section">
-    <canvas id="skinCanvas" width="300" height="400"></canvas>
-    <div class="skin-controls">
-      <label>Modèle :
-        <select id="modelSelect">
-          <option value="classic">Classic</option>
-          <option value="slim">Slim</option>
-        </select>
-      </label>
-      <input type="file" id="skinFileInput" accept=".png">
-      <button id="testTokenBtn">Tester le token</button>
+<div class="skins-grid-container">
+  <!-- Bouton choisir fichier (div1) -->
+  <div class="skin-upload-section">
+    <h3>Importer un skin</h3>
+    <input type="file" id="skinFileInput" accept=".png" style="display:none;">
+    
+    <div class="upload-row">
+      <button id="chooseFileBtn" class="choose-file-btn">
+        <span class="upload-icon">📁</span>
+        <span>Choisir un fichier</span>
+      </button>
+      
+      <input type="text" id="playerNameInput" placeholder="Nom du joueur ou URL du skin..." class="skin-search-input">
+      
+      <button id="loadSkinBtn" class="load-btn">Charger</button>
     </div>
-    <div id="tokenTestResult"></div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
-      <div id="currentSkinInfo" class="skin-current-info"></div>
-      <button id="applySkinBtn">Appliquer ce skin</button>
-    </div>
-    <div id="skinStatus"></div>
+    
+    <div class="file-info" id="fileInfo">Aucun fichier sélectionné</div>
   </div>
-  <!-- Historique des skins (à gauche) -->
-  <div class="skin-gallery-section">
-    <div class="skin-gallery-title">Historique des skins</div>
-    <div id="skinGallery"></div>
+
+  <!-- Affichage du skin actuel + contrôles (div2) -->
+  <div class="skin-current-section">
+    <h3>Skin actuel</h3>
+    <canvas id="skinCanvas" width="200" height="300"></canvas>
+    
+    <div class="skin-model-selector">
+      <label>
+        <input type="radio" name="model" id="modelClassic" value="classic" checked>
+        <span>Classic</span>
+      </label>
+      <label>
+        <input type="radio" name="model" id="modelSlim" value="slim">
+        <span>Slim</span>
+      </label>
+    </div>
+    
+    <button id="applySkinBtn" class="apply-btn">Appliquer ce skin</button>
+    <div id="skinStatus" class="skin-status"></div>
+  </div>
+
+  <!-- Historique des skins (div3 à div18) -->
+  <div id="skinSlot3" class="skin-slot empty" data-slot="3">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot4" class="skin-slot empty" data-slot="4">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot5" class="skin-slot empty" data-slot="5">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot6" class="skin-slot empty" data-slot="6">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot7" class="skin-slot empty" data-slot="7">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot8" class="skin-slot empty" data-slot="8">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot9" class="skin-slot empty" data-slot="9">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot10" class="skin-slot empty" data-slot="10">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot11" class="skin-slot empty" data-slot="11">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot12" class="skin-slot empty" data-slot="12">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot13" class="skin-slot empty" data-slot="13">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot14" class="skin-slot empty" data-slot="14">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot15" class="skin-slot empty" data-slot="15">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot16" class="skin-slot empty" data-slot="16">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot17" class="skin-slot empty" data-slot="17">
+    <div class="empty-text">+</div>
+  </div>
+  <div id="skinSlot18" class="skin-slot empty" data-slot="18">
+    <div class="empty-text">+</div>
   </div>
 </div>
-<!-- La logique skinview3d et skin upload est dans js/skins.js -->
+
+<script src="../js/skins.js"></script>
+</body>
+</html>

@@ -22,8 +22,8 @@ let updateWin;
 
 function createUpdateWindow() {
   updateWin = new BrowserWindow({
-    width: 600,
-    height: 500,
+    width: 980,
+    height: 552,
     frame: false,
     autoHideMenuBar: true,
     resizable: false,

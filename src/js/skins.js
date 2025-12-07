@@ -30,95 +30,92 @@
 
 
   await waitForElm('#skinCanvas');
-  await waitForElm('#modelSelect');
+  await waitForElm('#chooseFileBtn');
   await waitForElm('#skinFileInput');
   await waitForElm('#applySkinBtn');
   await waitForElm('#skinStatus');
-  await waitForElm('#skinGallery');
+  await waitForElm('#modelClassic');
+  await waitForElm('#modelSlim');
+  await waitForElm('#playerNameInput');
+  await waitForElm('#loadSkinBtn');
 
-  // Ajoute un bouton pour tester le token
-  await waitForElm('#testTokenBtn');
-  const tokenTestResult = document.getElementById('tokenTestResult');
-  document.getElementById('testTokenBtn').addEventListener('click', async () => {
-    tokenTestResult.style.display = 'block';
-    tokenTestResult.textContent = 'Test du token en cours...';
-    // Récupère l'UUID du compte sélectionné sur le bouton joueur, sinon fallback sur currentAccount
-    let uuid = null;
-    let accData = null;
-    const playerBtn = document.getElementById('player-btn');
-    if (playerBtn) {
-      const username = playerBtn.querySelector('.user-name')?.textContent;
-      if (window.electronAPI && window.electronAPI.getAccounts && username) {
-        const accounts = await window.electronAPI.getAccounts();
-        const acc = accounts.find(a => a.username === username);
-        if (acc) {
-          uuid = acc.uuid;
-          localStorage.setItem('lastAccountUUID', acc.uuid);
-        }
-      }
-    }
-    // Fallback : si pas de bouton joueur ou pas d'UUID, on prend le compte courant
-    if (!uuid && window.currentAccount && window.currentAccount.uuid) {
-      uuid = window.currentAccount.uuid;
-    }
-    if (!uuid) {
-      tokenTestResult.textContent = 'Aucun compte sélectionné.';
+  // Bouton pour choisir un fichier
+  document.getElementById('chooseFileBtn').addEventListener('click', () => {
+    document.getElementById('skinFileInput').click();
+  });
+
+  // Bouton unique pour charger un skin (nom de joueur ou URL)
+  document.getElementById('loadSkinBtn').addEventListener('click', async () => {
+    const input = document.getElementById('playerNameInput').value.trim();
+    if (!input) {
+      skinStatus.textContent = 'Veuillez entrer un nom de joueur ou une URL';
       return;
     }
-    // Toujours forcer le refresh du token, même si le compte courant est déjà sélectionné
+
+    skinStatus.textContent = 'Chargement...';
+
     try {
-      if (window.electronAPI && window.electronAPI.switchAccount) {
-        accData = await window.electronAPI.switchAccount(uuid, { forceRefresh: true });
-        window.currentAccount = accData;
+      let skinUrl, playerName;
+      let isSlim = false;
+
+      // Vérifie si c'est une URL (contient http)
+      if (input.startsWith('http')) {
+        // C'est une URL directe
+        skinUrl = input;
+        playerName = 'Skin personnalisé';
       } else {
-        accData = window.currentAccount;
-      }
-    } catch (e) {
-      tokenTestResult.textContent = 'Erreur lors de la sélection du compte : ' + e.message;
-      return;
-    }
-    // Utilise toujours le vrai token Minecraft si dispo
-    const accessToken = accData && (accData.minecraftAccessToken || accData.accessToken);
-    console.debug('[DEBUG] currentAccount:', window.currentAccount);
-    if (accessToken) {
-      console.debug('[DEBUG] accessToken:', accessToken);
-    } else {
-      console.debug('[DEBUG] Aucun accessToken trouvé');
-    }
-    if (!accessToken) {
-      tokenTestResult.textContent = 'Aucun accessToken trouvé.';
-      return;
-    }
-    try {
-      const mcProfileUrl = 'https://api.minecraftservices.com/minecraft/profile';
-      const mcProfileHeaders = { 'Authorization': 'Bearer ' + accessToken };
-      console.debug('[DEBUG][MC-API] GET', mcProfileUrl);
-      console.debug('[DEBUG][MC-API] Headers:', mcProfileHeaders);
-      const res = await fetch(mcProfileUrl, {
-        headers: mcProfileHeaders
-      });
-      let apiMsg = '';
-      try {
-        const apiJson = await res.json();
-        if (apiJson && (apiJson.errorMessage || apiJson.error)) {
-          apiMsg = ' | ' + (apiJson.errorMessage || apiJson.error);
+        // C'est un nom de joueur - récupère le skin via Mojang API
+        const profileUrl = `https://api.mojang.com/users/profiles/minecraft/${input}`;
+        const profileRes = await fetch(profileUrl);
+        if (!profileRes.ok) {
+          skinStatus.textContent = 'Joueur non trouvé';
+          return;
         }
-      } catch {}
-      if (res.status === 200) {
-        tokenTestResult.textContent = '✅ Token valide : accès au profil Minecraft OK.';
-      } else if (res.status === 401) {
-        tokenTestResult.textContent = '❌ Token invalide ou expiré (401). Relogue-toi.' + apiMsg;
-      } else if (res.status === 404) {
-        tokenTestResult.textContent = '❌ Aucun compte Minecraft n\'est associé à ce compte Microsoft (404).' + apiMsg;
-      } else {
-        tokenTestResult.textContent = 'Réponse inattendue : ' + res.status + apiMsg;
+        const profile = await profileRes.json();
+        const uuid = profile.id;
+        playerName = input;
+
+        // Récupère le skin depuis la session server
+        const sessionUrl = `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`;
+        const sessionRes = await fetch(sessionUrl);
+        if (!sessionRes.ok) {
+          skinStatus.textContent = 'Impossible de récupérer le skin';
+          return;
+        }
+        const sessionData = await sessionRes.json();
+        const textureData = JSON.parse(atob(sessionData.properties[0].value));
+        skinUrl = textureData.textures.SKIN.url;
+        isSlim = textureData.textures.SKIN.metadata?.model === 'slim';
       }
+
+      // Charge le skin
+      setSelectedModel(isSlim ? 'slim' : 'classic');
+      loadSkinFromFile(skinUrl, isSlim ? 'slim' : 'classic');
+      document.getElementById('fileInfo').textContent = playerName;
+      currentLoadedSkinUrl = skinUrl; // Stocke l'URL pour appliquer plus tard
+      importedSkinFile = null;
+      skinStatus.textContent = `Skin chargé: ${playerName}`;
     } catch (e) {
-      tokenTestResult.textContent = 'Erreur lors du test : ' + e.message;
+      skinStatus.textContent = 'Erreur: ' + e.message;
     }
   });
 
+  // Helper pour obtenir le modèle sélectionné
+  function getSelectedModel() {
+    return document.getElementById('modelClassic').checked ? 'classic' : 'slim';
+  }
+
+  // Helper pour définir le modèle
+  function setSelectedModel(model) {
+    if (model === 'slim') {
+      document.getElementById('modelSlim').checked = true;
+    } else {
+      document.getElementById('modelClassic').checked = true;
+    }
+  }
+
   let viewer;
+  let currentLoadedSkinUrl = null; // Stocke l'URL du skin chargé depuis joueur/URL
   function getUUID() {
     if (window.currentAccount && window.currentAccount.uuid) return window.currentAccount.uuid;
     return null;
@@ -174,11 +171,8 @@ async function loadSkin(uuid, model = "default", capeUrl = null) {
     if (skinUrl) {
       skinUrl += `?t=${Date.now()}`;
     }
-    // Met à jour le select si présent
-    const select = document.getElementById('modelSelect');
-    if (select) {
-      select.value = (variant === 'slim') ? 'slim' : 'classic';
-    }
+    // Met à jour les radio buttons
+    setSelectedModel((variant === 'slim') ? 'slim' : 'classic');
     resetViewer(skinUrl, (variant === 'slim') ? 'slim' : 'default');
   } catch (e) {
     console.error('Erreur chargement skin:', e);
@@ -188,11 +182,9 @@ async function loadSkin(uuid, model = "default", capeUrl = null) {
   // Capes fictives (à remplacer par tes vraies URLs dynamiques)
 
 
-  // Fonction pour charger le skin du compte courant (avec cape Mojang active si dispo)
+  // Fonction pour charger le skin du compte courant
 async function loadCurrentAccountSkin() {
-  // Attend que le canvas et le select soient prêts
   const canvas = await waitForElm("#skinCanvas");
-  const modelSelect = await waitForElm("#modelSelect");
   if (!canvas || !canvas.getContext) {
     console.warn("Canvas non disponible, attente du DOM...");
     return;
@@ -200,7 +192,7 @@ async function loadCurrentAccountSkin() {
   const uuid = getUUID();
   if (uuid) {
     console.debug('[skins.js] UUID du joueur ciblé :', uuid);
-    const model = modelSelect?.value || "default";
+    const model = getSelectedModel();
     loadSkin(uuid, model, null);
   }
 }
@@ -248,13 +240,24 @@ async function forceReloadCurrentAccountSkin(newAccount) {
     } catch (e) {}
   }
 
-  // Preview dynamique uniquement lors d'un changement de modèle
-  document.getElementById("modelSelect").addEventListener("change", (e) => {
+  // Preview dynamique lors d'un changement de modèle (radio buttons)
+  document.getElementById('modelClassic').addEventListener('change', () => {
     if (importedSkinFile) {
-      // Recharge l'aperçu avec le nouveau modèle, mais NE PAS réinitialiser importedSkinFile
       const reader = new FileReader();
       reader.onload = function(evt) {
-        loadSkinFromFile(evt.target.result, e.target.value);
+        loadSkinFromFile(evt.target.result, 'classic');
+      };
+      reader.readAsDataURL(importedSkinFile);
+    } else if (window.currentAccount && window.currentAccount.uuid) {
+      loadCurrentAccountSkin();
+    }
+  });
+
+  document.getElementById('modelSlim').addEventListener('change', () => {
+    if (importedSkinFile) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        loadSkinFromFile(evt.target.result, 'slim');
       };
       reader.readAsDataURL(importedSkinFile);
     } else if (window.currentAccount && window.currentAccount.uuid) {
@@ -298,9 +301,10 @@ async function forceReloadCurrentAccountSkin(newAccount) {
           }
           if (isSlim) detected = 'slim';
         } catch (err) {}
-        document.getElementById('modelSelect').value = detected;
+        setSelectedModel(detected);
         loadSkinFromFile(evt.target.result, detected);
         skinStatus.textContent = 'Modèle détecté : ' + detected;
+        document.getElementById('fileInfo').textContent = file.name;
         // --- Stockage local du skin dans la galerie ---
         // Galerie par compte
         let allGalleries = {};
@@ -322,17 +326,17 @@ async function forceReloadCurrentAccountSkin(newAccount) {
         renderSkinGallery();
       };
       img.onerror = function() {
-        loadSkinFromFile(evt.target.result, document.getElementById('modelSelect').value);
+        loadSkinFromFile(evt.target.result, getSelectedModel());
         skinStatus.textContent = '';
+        document.getElementById('fileInfo').textContent = file.name;
       };
       img.src = evt.target.result;
     };
     reader.readAsDataURL(file);
   });
 
-  // --- Affichage et gestion de la galerie de skins ---
+  // --- Affichage et gestion de la galerie de skins dans les 16 slots ---
   function renderSkinGallery() {
-    const galleryDiv = document.getElementById('skinGallery');
     // Galerie par compte
     let allGalleries = {};
     let uuid = (window.currentAccount && window.currentAccount.uuid) ? window.currentAccount.uuid : 'default';
@@ -340,12 +344,20 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       allGalleries = JSON.parse(localStorage.getItem('skinGalleryByAccount') || '{}');
     } catch {}
     let gallery = allGalleries[uuid] || [];
-    galleryDiv.innerHTML = '';
-    if (!gallery.length) {
-      galleryDiv.textContent = 'Aucun skin enregistré.';
-      return;
+    
+    // Reset tous les slots (3 à 18)
+    for (let i = 3; i <= 18; i++) {
+      const slot = document.getElementById('skinSlot' + i);
+      if (!slot) continue;
+      slot.innerHTML = '<div class="empty-text">+</div>';
+      slot.className = 'skin-slot empty';
     }
-    gallery.slice().reverse().forEach((skin, idx) => {
+    
+    // Remplir les slots avec les skins (max 16)
+    gallery.slice().reverse().slice(0, 16).forEach((skin, idx) => {
+      const slotNum = idx + 3; // slots 3 à 18
+      const slot = document.getElementById('skinSlot' + slotNum);
+      if (!slot) return;
       const wrapper = document.createElement('div');
       wrapper.style.display = 'flex';
       wrapper.style.flexDirection = 'column';
@@ -419,22 +431,17 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       // Appliquer le skin au clic sur la miniature
       canvas.onclick = () => {
         importedSkinFile = dataURLtoFile(skin.data, skin.name);
-        document.getElementById('modelSelect').value = skin.model;
+        setSelectedModel(skin.model);
         loadSkinFromFile(skin.data, skin.model);
         skinStatus.textContent = 'Skin sélectionné : ' + skin.name;
+        document.getElementById('fileInfo').textContent = skin.name;
       };
-      // Nom
-      const name = document.createElement('div');
-      name.textContent = skin.name;
-      name.style.fontSize = '0.7em';
-      name.style.color = '#ccc';
-      name.style.textAlign = 'center';
-      name.style.wordBreak = 'break-all';
-      // Ajout
-      wrapper.appendChild(closeBtn);
-      wrapper.appendChild(canvas);
-      wrapper.appendChild(name);
-      galleryDiv.appendChild(wrapper);
+      
+      // Remplacer le contenu du slot
+      slot.innerHTML = '';
+      slot.className = 'skin-slot';
+      slot.appendChild(closeBtn);
+      slot.appendChild(canvas);
     });
   }
 
@@ -453,11 +460,27 @@ async function forceReloadCurrentAccountSkin(newAccount) {
 
   // --- Appliquer le skin personnalisé sur le compte Minecraft ---
   document.getElementById('applySkinBtn').addEventListener('click', async () => {
-    if (!importedSkinFile) {
-      skinStatus.textContent = "Importe d'abord un skin .png";
+    // Vérifie qu'il y a un skin à appliquer (fichier importé OU URL chargée)
+    if (!importedSkinFile && !currentLoadedSkinUrl) {
+      skinStatus.textContent = "Importe un skin .png ou charge-le depuis un joueur/URL";
       return;
     }
-    // Vérifie que le fichier est bien un File natif (pas un dataURL ou Blob reconstruit)
+
+    // Si c'est une URL, on peut pas appliquer directement (faut télécharger le PNG en premier)
+    if (currentLoadedSkinUrl && !importedSkinFile) {
+      skinStatus.textContent = 'Téléchargement du skin depuis l\'URL...';
+      try {
+        const response = await fetch(currentLoadedSkinUrl);
+        if (!response.ok) throw new Error('Impossible de télécharger le skin');
+        const blob = await response.blob();
+        importedSkinFile = new File([blob], 'skin-from-url.png', { type: 'image/png' });
+      } catch (e) {
+        skinStatus.textContent = 'Erreur lors du téléchargement : ' + e.message;
+        return;
+      }
+    }
+
+    // Vérifie que le fichier est bien un File natif
     if (!(importedSkinFile instanceof File)) {
       skinStatus.textContent = 'Erreur : le fichier skin doit être un fichier PNG natif.';
       return;
@@ -497,7 +520,7 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       skinStatus.textContent = 'Erreur lors de la sélection du compte : ' + e.message;
       return;
     }
-    let variant = document.getElementById('modelSelect').value;
+    let variant = getSelectedModel(); // Utilise la fonction helper pour les radio buttons
     // DEBUG: log la valeur brute
     console.log('[DEBUG] variant:', variant);
     // Vérification stricte du champ variant
@@ -576,7 +599,24 @@ async function forceReloadCurrentAccountSkin(newAccount) {
       console.log('[DEBUG] body:', result);
       if (res.status === 200) {
         skinStatus.textContent = 'Skin appliqué avec succès !';
-        setTimeout(() => loadCurrentAccountSkin(), 1000);
+        // Récupère le profil mis à jour pour obtenir la nouvelle URL de texture
+        try {
+          const mcProfileUrl = 'https://api.minecraftservices.com/minecraft/profile';
+          const mcProfileHeaders = { 'Authorization': 'Bearer ' + accessToken };
+          const profileRes = await fetch(mcProfileUrl, {
+            headers: mcProfileHeaders
+          });
+          if (profileRes.status === 200) {
+            const profile = await profileRes.json();
+            if (profile.skins && profile.skins.length > 0) {
+              const activeSkin = profile.skins.find(s => s.active) || profile.skins[0];
+              const variant = activeSkin.model || 'classic';
+              resetViewer(activeSkin.url, variant);
+            }
+          }
+        } catch (e) {
+          console.warn('Impossible de recharger le skin depuis le profil:', e);
+        }
       } else {
         skinStatus.textContent = 'Erreur API : ' + result;
       }
