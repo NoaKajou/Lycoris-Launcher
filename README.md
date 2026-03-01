@@ -1,4 +1,4 @@
-
+V2 Launcher coming soon so don't read this
 
 # Lycoris Launcher
 
