@@ -1,211 +1,179 @@
-<p align="center"><img src="./app/assets/images/SealCircle.png" width="150px" height="150px" alt="aventium softworks"></p>
+<p align="center">
+  <img src="./app/assets/images/SealCircle.png" width="150px" height="150px" alt="Lycoris Launcher">
+</p>
 
-<h1 align="center">Lycoris Launcher</h1>
+<h1 align="center">🚀 Lycoris Launcher</h1>
 
-<em><h5 align="center">(formerly Electron Launcher)</h5></em>
+<p align="center">
+  <sub>(anciennement Electron Launcher)</sub>
+</p>
 
-[<p align="center"><img src="https://img.shields.io/github/actions/workflow/status/NoaKajou/Lycoris-Launcher/build.yml?branch=master&style=for-the-badge" alt="gh actions">](https://github.com/NoaKajou/Lycoris-Launcher/actions) [<img src="https://img.shields.io/github/downloads/NoaKajou/Lycoris-Launcher/total.svg?style=for-the-badge" alt="downloads">](https://github.com/NoaKajou/Lycoris-Launcher/releases) <img src="https://forthebadge.com/images/badges/winter-is-coming.svg"  height="28px" alt="winter-is-coming"></p>
+---
 
-<p align="center">Join modded servers without worrying about installing Java, Forge, or other mods. We'll handle that for you.</p>
+## 📸 Captures d'écran
 
-![Screenshot 1](https://i.imgur.com/6o7SmH6.png)
-![Screenshot 2](https://i.imgur.com/x3B34n1.png)
+<p align="center">
+  <img src="https://i.imgur.com/6o7SmH6.png" alt="Interface principale" width="45%">
+  <img src="https://i.imgur.com/x3B34n1.png" alt="Paramètres" width="45%">
+</p>
 
-## Features
+---
 
-* 🔒 Full account management.
-  * Add multiple accounts and easily switch between them.
-  * Microsoft (OAuth 2.0) + Mojang (Yggdrasil) authentication fully supported.
-  * Credentials are never stored and transmitted directly to Mojang.
-* 📂 Efficient asset management.
-  * Receive client updates as soon as we release them.
-  * Files are validated before launch. Corrupt or incorrect files will be redownloaded.
-* ☕ **Automatic Java validation.**
-  * If you have an incompatible version of Java installed, we'll install the right one *for you*.
-  * You do not need to have Java installed to run the launcher.
-* 📰 News feed natively built into the launcher.
-* ⚙️ Intuitive settings management, including a Java control panel.
-* Supports all of our servers.
-  * Switch between server configurations with ease.
-  * View the player count of the selected server.
-* Automatic updates. That's right, the launcher updates itself.
-*  View the status of Mojang's services.
+## ✨ Fonctionnalités
 
-This is not an exhaustive list. Download and install the launcher to gauge all it can do!
+### 🔐 **Gestion complète des comptes**
+- ✅ Ajoutez plusieurs comptes et basculez facilement
+- ✅ Authentification Microsoft (OAuth 2.0) et Mojang (Yggdrasil)
+- ✅ Identifiants jamais stockés et transmis directement à Mojang
+- ✅ Interface multilingue (Français/Anglais)
 
-#### Need Help? [Check the wiki.][wiki]
+### 📂 **Gestion intelligente des assets**
+- ✅ Réception automatique des mises à jour client
+- ✅ Validation des fichiers avant lancement
+- ✅ Re-téléchargement automatique des fichiers corrompus
 
-#### Like the project? Leave a ⭐ star on the repository!
+### ☕ **Validation automatique Java**
+- ✅ Installation automatique de la bonne version de Java
+- ✅ Aucune installation Java préalable requise
+- ✅ Support Java 8, 11, 17 et versions ultérieures
 
-## Downloads
+### 🎮 **Interface moderne**
+- ✅ Flux d'actualités intégré
+- ✅ Tableau de bord de paramètres intuitif
+- ✅ Thèmes avec backgrounds aléatoires
+- ✅ Compteur de joueurs en temps réel
 
-You can download from [GitHub Releases](https://github.com/NoaKajou/Lycoris-Launcher/releases)
+### 🌍 **Support multi-serveurs**
+- ✅ Basculement facile entre configurations
+- ✅ Support de tous types de serveurs (Vanilla, Forge, Fabric...)
+- ✅ Gestion automatique des mods requis/optionnels
 
-#### Latest Release
+### 🔄 **Mises à jour automatiques**
+- ✅ Le lanceur se met à jour automatiquement
+- ✅ Statut des services Mojang en temps réel
+- ✅ Notifications de nouvelles versions
 
-[![](https://img.shields.io/github/release/NoaKajou/Lycoris-Launcher.svg?style=flat-square)](https://github.com/NoaKajou/Lycoris-Launcher/releases/latest)
+---
 
-#### Latest Pre-Release
-[![](https://img.shields.io/github/release/NoaKajou/Lycoris-Launcher/all.svg?style=flat-square)](https://github.com/NoaKajou/Lycoris-Launcher/releases)
+## 📥 Téléchargement
 
-**Supported Platforms**
+### 🎯 **Version stable**
+[![Latest Release](https://img.shields.io/github/release/NoaKajou/Lycoris-Launcher.svg?style=for-the-badge&logo=github)](https://github.com/NoaKajou/Lycoris-Launcher/releases/latest)
 
-If you download from the [Releases](https://github.com/NoaKajou/Lycoris-Launcher/releases) tab, select the installer for your system.
+### 🧪 **Pré-version (Beta)**
+[![Latest Pre-Release](https://img.shields.io/github/release/NoaKajou/Lycoris-Launcher/all.svg?style=for-the-badge&logo=github)](https://github.com/NoaKajou/Lycoris-Launcher/releases)
 
-| Platform | File |
-| -------- | ---- |
-| Windows x64 | `Lycoris-Launcher-setup-VERSION.exe` |
-| macOS x64 | `Lycoris-Launcher-setup-VERSION-x64.dmg` |
-| macOS arm64 | `Lycoris-Launcher-setup-VERSION-arm64.dmg` |
-| Linux x64 | `Lycoris-Launcher-setup-VERSION.AppImage` |
+### 💻 **Plateformes supportées**
 
-## Console
+| Plateforme | Fichier | Statut |
+|------------|---------|---------|
+| Windows x64 | `Lycoris-Launcher-setup-VERSION.exe` | X Not Stable |
+| macOS Intel | `Lycoris-Launcher-setup-VERSION-x64.dmg` | X Not Stable |
+| macOS Apple Silicon | `Lycoris-Launcher-setup-VERSION-arm64.dmg` | X Not Stable |
+| Linux x64 | `Lycoris-Launcher-setup-VERSION.AppImage` | X Stable |
 
-To open the console, use the following keybind.
+---
 
-```console
-ctrl + shift + i
+## 🚧 Roadmap
+
+### **Prochaines améliorations**
+- 🎨 **Thèmes personnalisables** - Mode sombre/clair
+- ⚡ **Optimisation login Microsoft** - Réduction temps d'attente  
+- 📂 **Profils de lancement** - Configurations multiples
+- 🔧 **Performance générale** - Optimisations RAM/CPU
+
+### **Idées futures**
+- Discord Rich Presence, gestionnaire de captures, support modpacks avancé
+
+---
+
+## 🛠️ Développement
+
+### **Prérequis**
+- [Node.js](https://nodejs.org/) v20 ou supérieur
+- [Git](https://git-scm.com/)
+- Éditeur de code (VS Code recommandé)
+
+### **Installation**
+```bash
+# Cloner le projet
+git clone https://github.com/NoaKajou/Lycoris-Launcher.git
+cd Lycoris-Launcher
+
+# Installer les dépendances
+npm install
+
+# Lancer en mode développement
+npm start
 ```
 
-Ensure that you have the console tab selected. Do not paste anything into the console unless you are 100% sure of what it will do. Pasting the wrong thing can expose sensitive information.
+### **Build & Distribution**
+```bash
+# Build pour votre plateforme
+npm run dist
 
-#### Export Output to a File
-
-If you want to export the console output, simply right click anywhere on the console and click **Save as..**
-
-![console example](https://i.imgur.com/T5e73jP.png)
-
-
-## Development
-
-This section details the setup of a basic developmentment environment.
-
-### Getting Started
-
-**System Requirements**
-
-* [Node.js][nodejs] v20
-
----
-
-**Clone and Install Dependencies**
-
-```console
-> git clone https://github.com/NoaKajou/Lycoris-Launcher.git
-> cd Lycoris-Launcher
-> npm install
+# Build spécifique
+npm run dist:win    # Windows
+npm run dist:mac    # macOS  
+npm run dist:linux  # Linux
 ```
 
+### **Scripts disponibles**
+| Commande | Description |
+|----------|-------------|
+| `npm start` | Lance l'application en mode dev |
+| `npm run dist` | Build pour la plateforme actuelle |
+| `npm run dist:all` | Build pour toutes les plateformes |
+| `npm test` | Lance les tests unitaires |
+| `npm run lint` | Vérification code style |
+
 ---
 
-**Launch Application**
+## 🐛 Console & Debugging
 
-```console
-> npm start
+### **Ouvrir la console développeur**
+```
+Ctrl + Shift + I  (Windows/Linux)
+Cmd + Opt + I     (macOS)
 ```
 
----
+### **Exporter les logs**
+1. Clic droit dans la console
+2. Sélectionner **"Save as..."**
+3. Enregistrer le fichier de log
 
-**Build Installers**
-
-To build for your current platform.
-
-```console
-> npm run dist
-```
-
-Build for a specific platform.
-
-| Platform    | Command              |
-| ----------- | -------------------- |
-| Windows x64 | `npm run dist:win`   |
-| macOS       | `npm run dist:mac`   |
-| Linux x64   | `npm run dist:linux` |
-
-Builds for macOS may not work on Windows/Linux and vice-versa.
+⚠️ **Attention**: Ne collez jamais de code dans la console sans être sûr de ce qu'il fait !
 
 ---
 
-### Visual Studio Code
+## 📞 Support & Communauté
 
-All development of the launcher should be done using [Visual Studio Code][vscode].
+### **Besoin d'aide ?**
+- 📖 [Wiki officiel](https://github.com/NoaKajou/Lycoris-Launcher/wiki)
+- 💬 [Discord communautaire](https://discord.gg/zNWUXdt)
+- 🐛 [Signaler un bug](https://github.com/NoaKajou/Lycoris-Launcher/issues)
+- 💡 [Suggérer une fonctionnalité](https://github.com/NoaKajou/Lycoris-Launcher/issues/new?template=feature_request.md)
 
-Paste the following into `.vscode/launch.json`
+### **Contribuer**
+Les contributions sont les bienvenues ! Consultez le [guide de contribution](CONTRIBUTING.md).
 
-```JSON
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Debug Main Process",
-      "type": "node",
-      "request": "launch",
-      "cwd": "${workspaceFolder}",
-      "program": "${workspaceFolder}/node_modules/electron/cli.js",
-      "args" : ["."],
-      "outputCapture": "std"
-    },
-    {
-      "name": "Debug Renderer Process",
-      "type": "chrome",
-      "request": "launch",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
-      "windows": {
-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
-      },
-      "runtimeArgs": [
-        "${workspaceFolder}/.",
-        "--remote-debugging-port=9222"
-      ],
-      "webRoot": "${workspaceFolder}"
-    }
-  ]
-}
-```
-
-This adds two debug configurations.
-
-#### Debug Main Process
-
-This allows you to debug Electron's [main process][mainprocess]. You can debug scripts in the [renderer process][rendererprocess] by opening the DevTools Window.
-
-#### Debug Renderer Process
-
-This allows you to debug Electron's [renderer process][rendererprocess]. This requires you to install the [Debugger for Chrome][chromedebugger] extension.
-
-Note that you **cannot** open the DevTools window while using this debug configuration. Chromium only allows one debugger, opening another will crash the program.
+### **Ressources utiles**
+- [Nebula (Distribution.json Creator)](https://github.com/dscalzi/Nebula)
+- [Documentation Microsoft Auth](https://github.com/NoaKajou/Lycoris-Launcher/blob/master/docs/MicrosoftAuth.md)
+- [Branche V2 (Réécriture)](https://github.com/NoaKajou/Lycoris-Launcher/tree/ts-refactor)
 
 ---
 
-### Note on Third-Party Usage
+## 📄 Licence & Crédits
 
-Please give credit to the original author and provide a link to the original source. This is free software, please do at least this much.
+Ce projet est sous licence [LICENCE](LICENSE). 
 
-For instructions on setting up Microsoft Authentication, see https://github.com/NoaKajou/Lycoris-Launcher/blob/master/docs/MicrosoftAuth.md.
-
----
-
-## Resources
-
-* [Wiki][wiki]
-* [Nebula (Create Distribution.json)][nebula]
-* [v2 Rewrite Branch (Inactive)][v2branch]
-
-The best way to contact the developers is on Discord.
-
-[![discord](https://discordapp.com/api/guilds/211524927831015424/embed.png?style=banner3)][discord]
+**Utilisation par des tiers**: Merci de créditer l'auteur original et de fournir un lien vers la source. C'est un logiciel gratuit, faites au moins cela.
 
 ---
 
-### See you ingame.
-
-
-[nodejs]: https://nodejs.org/en/ 'Node.js'
-[vscode]: https://code.visualstudio.com/ 'Visual Studio Code'
-[mainprocess]: https://electronjs.org/docs/tutorial/application-architecture#main-and-renderer-processes 'Main Process'
-[rendererprocess]: https://electronjs.org/docs/tutorial/application-architecture#main-and-renderer-processes 'Renderer Process'
-[chromedebugger]: https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome 'Debugger for Chrome'
-[discord]: https://discord.gg/zNWUXdt 'Discord'
-[wiki]: https://github.com/NoaKajou/Lycoris-Launcher/wiki 'wiki'
-[nebula]: https://github.com/dscalzi/Nebula 'dscalzi/Nebula'
-[v2branch]: https://github.com/NoaKajou/Lycoris-Launcher/tree/ts-refactor 'v2 branch'
+<p align="center">
+  <img src="https://forthebadge.com/images/badges/winter-is-coming.svg" alt="Winter is Coming">
+  <br>
+  <strong>See you ingame! 🎮</strong>
+</p>
