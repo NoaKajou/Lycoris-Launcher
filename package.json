@@ -1,22 +1,51 @@
 {
-  "name": "lycoris-launcher",
-  "version": "1.0.0",
-  "description": "Un launcher d'application basé sur Electron.js",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron ."
+  "name": "lycorislauncher",
+  "version": "2.2.1",
+  "productName": "Lycoris Launcher",
+  "description": "Modded Minecraft Launcher",
+  "author": "Daniel Scalzi (https://github.com/dscalzi/)",
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/NoaKajou/Lycoris-Launcher",
+  "bugs": {
+    "url": "https://github.com/NoaKajou/Lycoris-Launcher/issues"
   },
-  "author": "NoaKajou",
-  "license": "MIT",
-  "devDependencies": {
-    "electron": "^30.0.0"
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder build",
+    "dist:win": "npm run dist -- -w",
+    "dist:mac": "npm run dist -- -m",
+    "dist:linux": "npm run dist -- -l",
+    "lint": "eslint --config .eslintrc.json ."
+  },
+  "engines": {
+    "node": "20.x.x"
   },
   "dependencies": {
-    "canvas": "^3.1.2",
-    "dotenv": "^17.2.1",
-    "minecraft-launcher-core": "^3.18.2",
-    "msal": "^1.4.18",
-    "node-fetch": "^3.3.2",
-    "skinview3d": "^3.4.1"
+    "@electron/remote": "^2.1.2",
+    "adm-zip": "^0.5.9",
+    "discord-rpc-patch": "^4.0.1",
+    "ejs": "^3.1.9",
+    "ejs-electron": "^3.0.0",
+    "electron-updater": "^6.1.8",
+    "fs-extra": "^11.1.1",
+    "github-syntax-dark": "^0.5.0",
+    "got": "^11.8.5",
+    "helios-core": "~2.2.0",
+    "helios-distribution-types": "^1.3.0",
+    "jquery": "^3.7.1",
+    "lodash.merge": "^4.6.2",
+    "semver": "^7.6.0",
+    "toml": "^3.0.0"
+  },
+  "devDependencies": {
+    "electron": "^29.1.0",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NoaKajou/Lycoris-Launcher.git"
   }
 }
